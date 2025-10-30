@@ -15,8 +15,8 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <!-- Actualizado a Spring Boot 3.2.x para compatibilidad con Java 21. -->
-        <version>3.2.12</version>
+        <!-- Actualizado a Spring Boot 3.5.x según la petición del usuario. -->
+        <version>3.5.0</version>
         <relativePath /> <!-- lookup parent from repository -->
     </parent>
 
