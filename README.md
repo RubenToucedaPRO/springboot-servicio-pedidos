@@ -3,16 +3,26 @@
 Estructura inicial del proyecto siguiendo Clean Architecture.
 
 Paquetes principales:
-- `domain` (modelo, servicios, eventos)
-- `application` (use cases, puertos)
+- `domain` (entidades, value-objects, errores, eventos)
+- `application` (use cases, puertos, dtos)
 - `infrastructure` (adaptadores: persistence, rest, configuración)
 - `shared` (utilidades, excepciones)
 
-Rellenar `pom.xml` con dependencias de Spring Boot y versiones deseadas.
+Nota de actualización
+---------------------
+Este proyecto ha sido actualizado para usar Java 21 (LTS) y Spring Boot 3.2.12.
+
+- Java: ahora se requiere Java 21 (LTS). Asegúrate de tener JDK 21 instalado y activo en tu entorno.
+- Spring Boot: el parent fue actualizado a `spring-boot-starter-parent` 3.2.12 para compatibilidad con Java 21 y Spring Framework 6 / Jakarta.
+
+Consejos rápidos tras la migración:
+
+- Recomendación: usa SDKMAN o la instalación de tu distribución para gestionar JDKs y dejar Java 21 como predeterminado durante el desarrollo.
+- Revisa integraciones externas o librerías que dependan de `javax.*`; con Spring Boot 3 / Spring Framework 6 es posible que debas migrar a paquetes `jakarta.*` si no se ha hecho ya.
 
 ## Comandos útiles
 
-Requisitos: Java (11+ recomendado) y Maven instalados.
+Requisitos: Java 21 (LTS) y Maven instalados.
 
 - Limpiar el proyecto (elimina `target/`):
 
@@ -64,31 +74,13 @@ mvn -Dspring-boot.run.profiles=dev spring-boot:run
 java -jar -Dspring.profiles.active=dev target/pedidos-0.0.1-SNAPSHOT.jar
 ```
 
-## Siguientes pasos recomendados
-
-- Completar `pom.xml` con la versión de Spring Boot y dependencias (spring-boot-starter-web, spring-boot-starter-data-jpa, etc.).
-- Añadir entidades y Value Objects en `src/main/java/com/example/pedidos/domain`.
-- Implementar casos de uso en `application/usecase` y los puertos en `application/port`.
-- Implementar adaptadores en `infrastructure` (JPA repositories, controladores REST, configuración).
-
-Si quieres, puedo:
-
-- Añadir un `pom.xml` base con dependencias recomendadas de Spring Boot.
-- Reemplazar `.gitkeep` por `README.md` explicativos en carpetas seleccionadas.
-
-Indica qué prefieres y continúo.
-
 ## Modo desarrollo (dev)
 
 Usa el perfil `dev` para ejecutar la aplicación con H2 en memoria y reinicio automático (devtools).
 
-- Ejecutar con Maven y perfil `dev`:
-
 ```bash
 mvn -Dspring-boot.run.profiles=dev spring-boot:run
 ```
-
-- Ejecutar el JAR con el perfil `dev`:
 
 ```bash
 # construir primero
@@ -107,8 +99,8 @@ java -Dspring.profiles.active=dev -jar target/pedidos-0.0.1-SNAPSHOT.jar
 
 ```bash
 mvn -Dspring-boot.run.profiles=dev \
-		-Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005" \
-		spring-boot:run
+        -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005" \
+        spring-boot:run
 ```
 
 Notas rápidas:
@@ -116,4 +108,3 @@ Notas rápidas:
 - `spring-boot-devtools` está incluido en `pom.xml` en scope `runtime` y permite reinicio automático cuando cambias código fuente.
 - Si quieres persistencia H2 en disco durante el desarrollo cambia la URL en `application-dev.yml` (p.ej. `jdbc:h2:file:./data/pedidos`).
 - Para ver SQL en consola ya está configurado `spring.jpa.show-sql=true` en `application-dev.yml`.
-
