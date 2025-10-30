@@ -1,7 +1,6 @@
 package com.pedidos.application.dto;
 
 import java.math.BigDecimal;
-import java.util.Objects;
 
 /**
  * DTO para añadir un item a un pedido existente.
@@ -15,10 +14,13 @@ public final class AddItemToOrderRequest {
 
     public AddItemToOrderRequest(String orderId, String productId, int quantity, BigDecimal unitPrice,
             String currency) {
-        this.orderId = Objects.requireNonNull(orderId);
-        this.productId = Objects.requireNonNull(productId);
+        // No validar con requireNonNull aquí: dejar que el caso de uso haga la
+        // validación
+        // para poder devolver errores controlados en vez de NullPointerException.
+        this.orderId = orderId;
+        this.productId = productId;
         this.quantity = quantity;
-        this.unitPrice = Objects.requireNonNull(unitPrice);
-        this.currency = Objects.requireNonNull(currency);
+        this.unitPrice = unitPrice;
+        this.currency = currency;
     }
 }
