@@ -1,0 +1,4 @@
+spring:
+  application:
+    name: pedidos-service
+# Añadir configuración por perfil y datasource según sea necesario
