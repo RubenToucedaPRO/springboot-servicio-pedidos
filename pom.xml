@@ -16,14 +16,11 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <!-- Actualizado a Spring Boot 3.5.x según la petición del usuario. -->
-        <version>3.5.0</version>
+        <version>3.5.7</version>
         <relativePath /> <!-- lookup parent from repository -->
     </parent>
 
     <properties>
-        <!-- Usar Java 21 (objetivo de upgrade). Nota: Spring Boot 2.7.x puede no ser totalmente
-        compatible con Java 21;
-             considere actualizar a Spring Boot 3.2.x+ si encuentra problemas de compatibilidad. -->
         <java.version>21</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>

@@ -5,14 +5,14 @@ import java.math.BigDecimal;
 /**
  * DTO para añadir un item a un pedido existente.
  */
-public final class AddItemToOrderRequest {
+public final class AddItemToOrderRequestDto {
     public final String orderId; // UUID string
     public final String productId;
     public final int quantity;
     public final BigDecimal unitPrice;
     public final String currency;
 
-    public AddItemToOrderRequest(String orderId, String productId, int quantity, BigDecimal unitPrice,
+    public AddItemToOrderRequestDto(String orderId, String productId, int quantity, BigDecimal unitPrice,
             String currency) {
         // No validar con requireNonNull aquí: dejar que el caso de uso haga la
         // validación

@@ -12,6 +12,7 @@ import com.pedidos.domain.events.ItemAddedEvent;
 import com.pedidos.domain.events.ItemRemovedEvent;
 import com.pedidos.domain.events.OrderCreatedEvent;
 import com.pedidos.domain.events.OrderTotalsCalculatedEvent;
+import com.pedidos.domain.valueobjects.Currency;
 import com.pedidos.domain.valueobjects.Money;
 import com.pedidos.domain.valueobjects.OrderId;
 import com.pedidos.domain.valueobjects.OrderItem;
@@ -72,20 +73,14 @@ public class Order {
     /**
      * Calcula los totales agrupados por moneda.
      */
-    public Map<com.pedidos.domain.valueobjects.Currency, Money> totalsByCurrency() {
-        Map<com.pedidos.domain.valueobjects.Currency, Money> totals = new LinkedHashMap<>();
+    public Map<Currency, Money> totalsByCurrency() {
+        Map<Currency, Money> totals = new LinkedHashMap<>();
         for (OrderItem item : items.values()) {
             Money lineTotal = item.total();
-            com.pedidos.domain.valueobjects.Currency cur = lineTotal.getCurrency();
+            Currency cur = lineTotal.getCurrency();
             totals.merge(cur, lineTotal, (a, b) -> a.add(b));
         }
         domainEvents.add(new OrderTotalsCalculatedEvent(id, totals, Instant.now()));
         return Collections.unmodifiableMap(totals);
-    }
-
-    public Money totalForCurrency(com.pedidos.domain.valueobjects.Currency currency) {
-        Objects.requireNonNull(currency);
-        Map<com.pedidos.domain.valueobjects.Currency, Money> totals = totalsByCurrency();
-        return totals.getOrDefault(currency, Money.zero(currency));
     }
 }

@@ -12,20 +12,23 @@ import java.util.Set;
  */
 public final class Currency {
     private static final Set<String> SUPPORTED;
+    private final String code;
 
     static {
         Set<String> s = new HashSet<>();
         s.add("EUR");
         s.add("USD");
-        SUPPORTED = Collections.unmodifiableSet(s);
+        SUPPORTED = Collections.unmodifiableSet(s); // wrapper - evita modificaciones externas
+        // wrapper es un objeto inmutable que previene cambios en el conjunto original
+        // no se pueden agregar ni eliminar elementos
+        // garantiza que SUPPORTED siempre contenga los mismos valores
     }
-
-    private final String code;
 
     private Currency(String code) {
         this.code = code;
     }
 
+    // of -factory controlada de Currency
     public static Currency of(String code) {
         Objects.requireNonNull(code, "currency code must not be null");
         String normalized = code.trim().toUpperCase();

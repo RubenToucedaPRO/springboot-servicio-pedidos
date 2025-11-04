@@ -2,7 +2,7 @@ package com.pedidos.application.usecase;
 
 import java.util.Optional;
 
-import com.pedidos.application.dto.AddItemToOrderRequest;
+import com.pedidos.application.dto.AddItemToOrderRequestDto;
 import com.pedidos.application.errors.AppError;
 import com.pedidos.application.errors.NotFoundError;
 import com.pedidos.application.errors.ValidationError;
@@ -29,7 +29,7 @@ public final class AddItemToOrderUseCase {
         this.eventBus = eventBus;
     }
 
-    public Result<OrderId, AppError> execute(AddItemToOrderRequest request) {
+    public Result<OrderId, AppError> execute(AddItemToOrderRequestDto request) {
         OrderId orderId;
         try {
             orderId = new OrderId(java.util.UUID.fromString(request.orderId));

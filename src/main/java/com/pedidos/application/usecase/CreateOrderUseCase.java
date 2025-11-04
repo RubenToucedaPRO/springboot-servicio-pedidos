@@ -2,7 +2,8 @@ package com.pedidos.application.usecase;
 
 import java.util.List;
 
-import com.pedidos.application.dto.CreateOrderRequest;
+import com.pedidos.application.dto.CreateOrderItemDto;
+import com.pedidos.application.dto.CreateOrderRequestDto;
 import com.pedidos.application.errors.AppError;
 import com.pedidos.application.errors.ValidationError;
 import com.pedidos.application.port.out.EventBus;
@@ -28,8 +29,8 @@ public final class CreateOrderUseCase {
         this.eventBus = eventBus;
     }
 
-    public Result<OrderId, AppError> execute(CreateOrderRequest request) {
-        List<CreateOrderRequest.Item> items = request.getItems();
+    public Result<OrderId, AppError> execute(CreateOrderRequestDto request) {
+        List<CreateOrderItemDto> items = request.getItems();
         if (items == null || items.isEmpty()) {
             return Result.fail(new ValidationError("Order must contain at least one item"));
         }
@@ -37,7 +38,7 @@ public final class CreateOrderUseCase {
         OrderId orderId = OrderId.newId();
         Order order = Order.create(orderId);
 
-        for (CreateOrderRequest.Item it : items) {
+        for (CreateOrderItemDto it : items) {
             if (it.quantity <= 0) {
                 return Result.fail(new ValidationError("Quantity must be > 0 for product " + it.productId));
             }
