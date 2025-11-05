@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- 🔹 Perfil de desarrollo: logs bonitos y con colores -->
+    <springProfile name="dev">
+        <appender name="PRETTY_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%highlight(%-5level) %cyan(%logger{15}) - %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <root level="DEBUG">
+            <appender-ref ref="PRETTY_CONSOLE" />
+        </root>
+    </springProfile>
+
+
+    <!-- 🔹 Perfil de producción: logs JSON rápidos y estructurados -->
+    <springProfile name="prod">
+        <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+        </appender>
+
+        <root level="INFO">
+            <appender-ref ref="JSON_CONSOLE" />
+        </root>
+    </springProfile>
+
+</configuration>

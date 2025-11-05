@@ -29,12 +29,15 @@ import com.pedidos.shared.result.Result;
  */
 public class PostgresOrderRepository implements OrderRepository {
     private final DataSource dataSource;
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PostgresOrderRepository.class);
 
     public PostgresOrderRepository(DataSource dataSource) {
         this.dataSource = dataSource;
         try (Connection c = dataSource.getConnection()) {
             ensureSchema(c);
+            log.info("PostgresOrderRepository initialized and schema ensured");
         } catch (SQLException e) {
+            log.error("Failed to initialize PostgresOrderRepository schema: {}", e.toString());
             throw new RuntimeException("Failed to initialize PostgresOrderRepository schema", e);
         }
     }
@@ -52,6 +55,7 @@ public class PostgresOrderRepository implements OrderRepository {
 
     @Override
     public Result<Void, AppError> save(Order order) {
+        log.debug("PostgresOrderRepository.save - orderId={} items={}", order.getId(), order.getItems().size());
         String sqlInsertOrder = "INSERT INTO orders (id, created_at) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET created_at = EXCLUDED.created_at";
         String sqlDeleteItems = "DELETE FROM order_items WHERE order_id = ?";
         String sqlInsertItem = "INSERT INTO order_items(order_id, product_id, quantity, unit_amount, currency) VALUES (?, ?, ?, ?, ?)";
@@ -85,8 +89,10 @@ public class PostgresOrderRepository implements OrderRepository {
 
             c.commit();
             c.setAutoCommit(oldAuto);
+            log.info("PostgresOrderRepository.save - saved order {}", order.getId());
             return Result.ok(null);
         } catch (SQLException e) {
+            log.error("PostgresOrderRepository.save - failed to save order {}: {}", order.getId(), e.toString());
             return Result.fail(new InfraError("Failed to save order: " + e.getMessage(), e));
         }
     }
@@ -128,8 +134,10 @@ public class PostgresOrderRepository implements OrderRepository {
 
             return Result.ok(Optional.of(order));
         } catch (SQLException e) {
+            log.error("PostgresOrderRepository.findById - SQL error for id {}: {}", id, e.toString());
             return Result.fail(new InfraError("Failed to query order: " + e.getMessage(), e));
         } catch (Exception e) {
+            log.error("PostgresOrderRepository.findById - mapping error for id {}: {}", id, e.toString());
             return Result.fail(new InfraError("Failed to map order from DB: " + e.getMessage(), e));
         }
     }
@@ -142,8 +150,10 @@ public class PostgresOrderRepository implements OrderRepository {
                 p.setString(1, id.getId().toString());
                 p.executeUpdate();
             }
+            log.info("PostgresOrderRepository.delete - deleted order {}", id);
             return Result.ok(null);
         } catch (SQLException e) {
+            log.error("PostgresOrderRepository.delete - failed to delete {}: {}", id, e.toString());
             return Result.fail(new InfraError("Failed to delete order: " + e.getMessage(), e));
         }
     }

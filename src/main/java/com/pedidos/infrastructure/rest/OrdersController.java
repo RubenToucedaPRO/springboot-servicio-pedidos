@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.pedidos.application.dto.ItemDto;
 import com.pedidos.application.dto.ItemToOrderDto;
@@ -39,6 +41,7 @@ import com.pedidos.shared.result.Result;
 @RestController
 @RequestMapping("/api/orders")
 public class OrdersController {
+    private static final Logger log = LoggerFactory.getLogger(OrdersController.class);
     private final OrderRepository repository;
     private final EventBus eventBus;
 
@@ -95,19 +98,23 @@ public class OrdersController {
 
     @PostMapping
     public ResponseEntity<?> createOrder(@RequestBody OrderDto body) {
+        log.info("POST /api/orders - createOrder request received: items={} ", body == null ? 0 : body.getItems() == null ? 0 : body.getItems().size());
         CreateOrderUseCase uc = new CreateOrderUseCase(repository, eventBus);
         Result<?, AppError> res = uc.execute(body);
         if (res.isOk()) {
             Object value = res.getValue();
+            log.info("Order created successfully: {}", value);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new CreatedResponse(Objects.toString(value, null)));
         } else {
+            log.warn("Create order failed: {}", res.getError());
             return mapError(res.getError());
         }
     }
 
     @PostMapping("/{orderId}/items")
     public ResponseEntity<?> addItem(@PathVariable String orderId, @RequestBody ItemDto body) {
+        log.info("POST /api/orders/{}/items - addItem request received: {}", orderId, body);
         if (body == null)
             return ResponseEntity.badRequest().body(new ErrorResponse("validation_error", "Invalid body"));
 
@@ -116,8 +123,10 @@ public class OrdersController {
         Result<?, AppError> res = uc.execute(req);
         if (res.isOk()) {
             Object value = res.getValue();
+            log.info("Item added to order {}: {}", orderId, value);
             return ResponseEntity.ok(new CreatedResponse(Objects.toString(value, null)));
         } else {
+            log.warn("Add item failed for order {}: {}", orderId, res.getError());
             return mapError(res.getError());
         }
     }
@@ -127,9 +136,11 @@ public class OrdersController {
 
     @GetMapping("/{orderId}")
     public ResponseEntity<?> getOrder(@PathVariable String orderId) {
+        log.debug("GET /api/orders/{} - fetching order", orderId);
         GetOrderUseCase uc = new GetOrderUseCase(repository);
         Result<Optional<Order>, AppError> res = uc.execute(orderId);
         if (!res.isOk()) {
+            log.warn("Get order failed for {}: {}", orderId, res.getError());
             return mapError(res.getError());
         }
 
@@ -154,12 +165,15 @@ public class OrdersController {
 
     @DeleteMapping("/{orderId}")
     public ResponseEntity<?> deleteOrder(@PathVariable String orderId) {
+        log.info("DELETE /api/orders/{} - delete request", orderId);
         DeleteOrderUseCase delUc = new DeleteOrderUseCase(repository, eventBus);
         Result<Void, AppError> res = delUc.execute(orderId);
         if (!res.isOk()) {
+            log.warn("Delete order failed for {}: {}", orderId, res.getError());
             return mapError(res.getError());
         }
         // Successful delete — return 200 OK
+        log.info("Order deleted: {}", orderId);
         return ResponseEntity.ok("Deleted successfully: " + orderId);
     }
 

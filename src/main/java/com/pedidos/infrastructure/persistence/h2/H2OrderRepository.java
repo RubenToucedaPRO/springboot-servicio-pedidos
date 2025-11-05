@@ -32,12 +32,15 @@ import com.pedidos.shared.result.Result;
  */
 public class H2OrderRepository implements OrderRepository {
     private final DataSource dataSource;
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(H2OrderRepository.class);
 
     public H2OrderRepository(DataSource dataSource) {
         this.dataSource = dataSource;
         try (Connection c = dataSource.getConnection()) {
             ensureSchema(c);
+            log.info("H2OrderRepository initialized and schema ensured");
         } catch (SQLException e) {
+            log.error("Failed to initialize H2OrderRepository schema: {}", e.toString());
             throw new RuntimeException("Failed to initialize H2OrderRepository schema", e);
         }
     }
@@ -55,6 +58,7 @@ public class H2OrderRepository implements OrderRepository {
 
     @Override
     public Result<Void, AppError> save(Order order) {
+        log.debug("H2OrderRepository.save - orderId={} items={}", order.getId(), order.getItems().size());
         String sqlInsertOrder = "MERGE INTO orders (id, created_at) KEY(id) VALUES (?, ?)";
         String sqlDeleteItems = "DELETE FROM order_items WHERE order_id = ?";
         String sqlInsertItem = "INSERT INTO order_items(order_id, product_id, quantity, unit_amount, currency) VALUES (?, ?, ?, ?, ?)";
@@ -89,8 +93,10 @@ public class H2OrderRepository implements OrderRepository {
 
             c.commit();
             c.setAutoCommit(oldAuto);
+            log.info("H2OrderRepository.save - saved order {}", order.getId());
             return Result.ok(null);
         } catch (SQLException e) {
+            log.error("H2OrderRepository.save - failed to save order {}: {}", order.getId(), e.toString());
             return Result.fail(new InfraError("Failed to save order: " + e.getMessage(), e));
         }
     }
@@ -132,9 +138,11 @@ public class H2OrderRepository implements OrderRepository {
 
             return Result.ok(Optional.of(order));
         } catch (SQLException e) {
+            log.error("H2OrderRepository.findById - SQL error for id {}: {}", id, e.toString());
             return Result.fail(new InfraError("Failed to query order: " + e.getMessage(), e));
         } catch (Exception e) {
             // any mapping/domain exception
+            log.error("H2OrderRepository.findById - mapping error for id {}: {}", id, e.toString());
             return Result.fail(new InfraError("Failed to map order from DB: " + e.getMessage(), e));
         }
     }
@@ -148,8 +156,10 @@ public class H2OrderRepository implements OrderRepository {
                 p.executeUpdate();
                 // idempotent delete: if no rows affected, order did not exist, but return ok
             }
+            log.info("H2OrderRepository.delete - deleted order {}", id);
             return Result.ok(null);
         } catch (SQLException e) {
+            log.error("H2OrderRepository.delete - failed to delete {}: {}", id, e.toString());
             return Result.fail(new InfraError("Failed to delete order: " + e.getMessage(), e));
         }
     }

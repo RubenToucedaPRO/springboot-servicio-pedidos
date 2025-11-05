@@ -11,6 +11,8 @@ import com.pedidos.application.errors.AppError;
 import com.pedidos.application.errors.InfraError;
 import com.pedidos.application.port.out.EventBus;
 import com.pedidos.shared.result.Result;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * EventBus síncrono en memoria.
@@ -24,6 +26,7 @@ import com.pedidos.shared.result.Result;
 public final class InMemoryEventBus implements EventBus {
 
     private final Map<Class<?>, List<EventHandler<?>>> handlers = new ConcurrentHashMap<>();
+    private static final Logger log = LoggerFactory.getLogger(InMemoryEventBus.class);
 
     /**
      * Registra un handler para un tipo de evento concreto.
@@ -53,6 +56,8 @@ public final class InMemoryEventBus implements EventBus {
 
         Class<?> eventClass = event.getClass();
 
+        log.debug("Publishing event of type {} to handlers", eventClass.getSimpleName());
+
         // Recolectar handlers aplicables (incluye superclases/interfaces)
         List<EventHandler<?>> applicable = new ArrayList<>();
         for (Map.Entry<Class<?>, List<EventHandler<?>>> e : handlers.entrySet()) {
@@ -68,17 +73,20 @@ public final class InMemoryEventBus implements EventBus {
                 EventHandler<Object> eh = (EventHandler<Object>) h;
                 Result<Void, AppError> res = eh.handle(event);
                 if (res == null) {
+                    log.error("Event handler returned null Result for event {}", eventClass.getSimpleName());
                     return Result.fail(new InfraError("Event handler returned null Result",
                             new NullPointerException("handler returned null")));
                 }
                 if (res.isFail()) {
+                    log.warn("Event handler returned failure for event {}: {}", eventClass.getSimpleName(), res.getError());
                     return Result.fail(res.getError());
                 }
             } catch (Exception ex) {
+                log.error("Event handler threw exception for event {}: {}", eventClass.getSimpleName(), ex.toString());
                 return Result.fail(new InfraError("Event handler threw exception: " + ex.getMessage(), ex));
             }
         }
-
+        log.debug("Event {} published successfully", eventClass.getSimpleName());
         return Result.ok(null);
     }
 }

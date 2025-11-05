@@ -17,11 +17,14 @@ import com.pedidos.domain.valueobjects.OrderItem;
 import com.pedidos.domain.valueobjects.ProductId;
 import com.pedidos.domain.valueobjects.Quantity;
 import com.pedidos.shared.result.Result;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Caso de uso: añadir un item a un pedido existente.
  */
 public final class AddItemToOrderUseCase {
+    private static final Logger log = LoggerFactory.getLogger(AddItemToOrderUseCase.class);
     private final OrderRepository repository;
     private final EventBus eventBus;
 
@@ -31,7 +34,10 @@ public final class AddItemToOrderUseCase {
     }
 
     public Result<OrderId, AppError> execute(ItemToOrderDto request) {
+        log.debug("AddItemToOrderUseCase.execute - orderId={} item={} ", request == null ? null : request.orderId,
+                request == null ? null : request.item);
         if (request == null) {
+            log.warn("AddItemToOrderUseCase - missing request");
             return Result.fail(new ValidationError("Missing request"));
         }
 
@@ -44,6 +50,8 @@ public final class AddItemToOrderUseCase {
 
         Result<Optional<Order>, AppError> orderSearchResult = repository.findById(orderId);
         if (orderSearchResult.isFail())
+            log.error("AddItemToOrderUseCase - repository.findById failed for {}: {}", orderId,
+                    orderSearchResult.getError());
             return Result.fail(orderSearchResult.getError());
         Optional<Order> optionalOrder = orderSearchResult.getValue();
         if (optionalOrder.isEmpty())
@@ -64,18 +72,24 @@ public final class AddItemToOrderUseCase {
             orderItem = new OrderItem(pid, qty, price);
             order.addItem(orderItem);
         } catch (IllegalArgumentException | DomainException e) {
+            log.warn("AddItemToOrderUseCase - validation error: {}", e.getMessage());
             return Result.fail(new ValidationError(e.getMessage()));
         }
 
         Result<Void, AppError> saveRes = repository.save(order);
         if (saveRes.isFail())
+            log.error("AddItemToOrderUseCase - failed to save order {}: {}", orderId, saveRes.getError());
             return Result.fail(saveRes.getError());
 
         for (Object ev : order.pullDomainEvents()) {
             Result<Void, AppError> pub = eventBus.publish(ev);
             if (pub.isFail())
+                log.error("AddItemToOrderUseCase - event publish failed for order {}: {}", orderId,
+                        pub.getError());
                 return Result.fail(pub.getError());
         }
+
+        log.info("AddItemToOrderUseCase - item added to order {}", orderId);
 
         return Result.ok(orderId);
     }
