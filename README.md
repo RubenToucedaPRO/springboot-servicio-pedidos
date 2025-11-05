@@ -218,6 +218,16 @@ docker-compose logs -f postgres
 docker-compose down -v
 ```
 
+### pgAdmin (opcional)
+
+Si prefieres usar una interfaz gráfica para explorar la base de datos, este repositorio incluye un servicio `pgadmin` en `docker-compose.yml`.
+
+- Accede a: http://localhost:8081
+- Credenciales por defecto: `pgadmin@local` / `pgadmin`
+- Dentro de pgAdmin añade un servidor con Host: `postgres`, Port: `5432`, Username: `postgres`, Password: `postgres`.
+
+Nota: cuando configures el servidor dentro de pgAdmin (que corre en otro contenedor), utiliza el hostname `postgres` (la red de Docker los resuelve). Si conectas desde tu máquina directamente usa `localhost:5432`.
+
 Después de levantar Postgres con `docker-compose up -d` puedes ejecutar la app en modo dev (usa `.env` o las variables por defecto):
 
 ```bash

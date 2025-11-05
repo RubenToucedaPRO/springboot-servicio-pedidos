@@ -177,3 +177,32 @@ Comandos útiles dentro de `psql`:
 
 - La aplicación no conecta a la BD (connection refused)
   - Asegúrate de que el contenedor está `Up (healthy)` y que la URL en `.env` coincide con la URL del servicio. Revisa `docker compose logs postgres`.
+
+---
+
+## 8. pgAdmin (UI web para Postgres)
+
+Si prefieres una interfaz gráfica para explorar la base de datos, este repositorio incluye un servicio `pgadmin` dentro del `docker-compose.yml`.
+
+1. Accede a la web de pgAdmin en tu navegador:
+
+```text
+http://localhost:8081
+```
+
+2. Credenciales por defecto (configuradas en `docker-compose.yml`):
+
+- Email: `pgadmin@local`
+- Password: `pgadmin`
+
+3. Añadir el servidor Postgres dentro de pgAdmin:
+
+- Hostname/address: `postgres`
+- Port: `5432`
+- Maintenance database: `postgres` (o `pedidos` si prefieres)
+- Username: `postgres`
+- Password: `postgres`
+
+Nota: al usar el `docker-compose` incluido, `pgadmin` y `postgres` comparten la misma red de Docker; por eso el hostname del servidor es `postgres` (no `localhost`) cuando se configura desde la interfaz de pgAdmin que corre en otro contenedor. Si accedes con un cliente desde tu máquina local (fuera de Docker), la conexión seguirá siendo `localhost:5432`.
+
+Si quieres cambiar las credenciales por defecto, edita las variables `PGADMIN_DEFAULT_EMAIL` y `PGADMIN_DEFAULT_PASSWORD` en `docker-compose.yml`.
