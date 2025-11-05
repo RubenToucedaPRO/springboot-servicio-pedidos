@@ -2,7 +2,6 @@ package com.pedidos.domain.valueobjects;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -30,10 +29,11 @@ public final class Currency {
 
     // of -factory controlada de Currency
     public static Currency of(String code) {
-        Objects.requireNonNull(code, "currency code must not be null");
+        if (code == null)
+            throw new com.pedidos.domain.errors.InvalidCurrencyException("currency code must not be null");
         String normalized = code.trim().toUpperCase();
         if (!SUPPORTED.contains(normalized)) {
-            throw new IllegalArgumentException("Unsupported currency: " + normalized);
+            throw new com.pedidos.domain.errors.InvalidCurrencyException("Unsupported currency: " + normalized);
         }
         return new Currency(normalized);
     }

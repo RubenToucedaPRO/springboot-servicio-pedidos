@@ -1,7 +1,5 @@
 package com.pedidos.domain.valueobjects;
 
-import java.util.Objects;
-
 /**
  * Simple value object for product identity.
  */
@@ -9,9 +7,12 @@ public final class ProductId {
     private final String id;
 
     public ProductId(String id) {
-        this.id = Objects.requireNonNull(id, "product id must not be null").trim();
-        if (this.id.isEmpty())
-            throw new IllegalArgumentException("product id must not be empty");
+        if (id == null)
+            throw new com.pedidos.domain.errors.InvalidProductIdException("product id must not be null");
+        String trimmed = id.trim();
+        if (trimmed.isEmpty())
+            throw new com.pedidos.domain.errors.InvalidProductIdException("product id must not be empty");
+        this.id = trimmed;
     }
 
     public String getId() {

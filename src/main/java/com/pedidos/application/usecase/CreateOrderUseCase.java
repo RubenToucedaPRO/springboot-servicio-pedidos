@@ -9,6 +9,7 @@ import com.pedidos.application.errors.ValidationError;
 import com.pedidos.application.port.out.EventBus;
 import com.pedidos.application.port.out.OrderRepository;
 import com.pedidos.domain.entities.Order;
+import com.pedidos.domain.errors.DomainException;
 import com.pedidos.domain.valueobjects.Currency;
 import com.pedidos.domain.valueobjects.Money;
 import com.pedidos.domain.valueobjects.OrderId;
@@ -45,32 +46,14 @@ public final class CreateOrderUseCase {
             ProductId pid;
             try {
                 pid = new ProductId(it.productId);
-            } catch (Exception e) {
-                return Result.fail(new ValidationError("Invalid product id: " + it.productId));
-            }
+                Currency currency = Currency.of(it.currency);
+                Money unitPrice = new Money(it.unitPrice, currency);
+                Quantity qty = new Quantity(it.quantity);
 
-            Currency currency;
-            try {
-                currency = Currency.of(it.currency);
-            } catch (Exception e) {
-                return Result.fail(new ValidationError("Unsupported currency: " + it.currency));
+                order.addItem(new OrderItem(pid, qty, unitPrice));
+            } catch (IllegalArgumentException | DomainException e) {
+                return Result.fail(new ValidationError(e.getMessage()));
             }
-
-            Money unitPrice;
-            try {
-                unitPrice = new Money(it.unitPrice, currency);
-            } catch (Exception e) {
-                return Result.fail(new ValidationError("Invalid unit price for product " + it.productId));
-            }
-
-            Quantity qty;
-            try {
-                qty = new Quantity(it.quantity);
-            } catch (Exception e) {
-                return Result.fail(new ValidationError("Invalid quantity for product " + it.productId));
-            }
-
-            order.addItem(new OrderItem(pid, qty, unitPrice));
         }
 
         // persist

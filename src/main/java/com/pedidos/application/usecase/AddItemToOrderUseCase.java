@@ -9,6 +9,7 @@ import com.pedidos.application.errors.ValidationError;
 import com.pedidos.application.port.out.EventBus;
 import com.pedidos.application.port.out.OrderRepository;
 import com.pedidos.domain.entities.Order;
+import com.pedidos.domain.errors.DomainException;
 import com.pedidos.domain.valueobjects.Currency;
 import com.pedidos.domain.valueobjects.Money;
 import com.pedidos.domain.valueobjects.OrderId;
@@ -62,7 +63,7 @@ public final class AddItemToOrderUseCase {
             Money price = new Money(request.item.unitPrice, cur);
             orderItem = new OrderItem(pid, qty, price);
             order.addItem(orderItem);
-        } catch (IllegalArgumentException | com.pedidos.domain.errors.DomainException e) {
+        } catch (IllegalArgumentException | DomainException e) {
             return Result.fail(new ValidationError(e.getMessage()));
         }
 

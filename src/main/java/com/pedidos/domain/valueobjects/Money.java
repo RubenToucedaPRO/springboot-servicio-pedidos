@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Objects;
 
+import com.pedidos.domain.errors.InvalidMoneyException;
 import com.pedidos.domain.errors.InvalidMoneyOperationException;
 
 /**
@@ -18,11 +19,18 @@ public final class Money {
     private final Currency currency;
 
     public Money(BigDecimal amount, Currency currency) {
-        this.amount = Objects.requireNonNull(amount, "amount must not be null").setScale(2, RoundingMode.HALF_EVEN);
-        this.currency = Objects.requireNonNull(currency, "currency must not be null");
-        if (amount.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Amount must not be negative");
+        if (amount == null)
+            throw new InvalidMoneyException("amount must not be null");
+        if (currency == null)
+            throw new InvalidMoneyException("currency must not be null");
+
+        BigDecimal normalized = amount.setScale(2, RoundingMode.HALF_EVEN);
+        if (normalized.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidMoneyException("Amount must be be greater than zero");
         }
+
+        this.amount = normalized;
+        this.currency = currency;
     }
 
     /**
@@ -34,7 +42,9 @@ public final class Money {
     }
 
     public static Money zero(Currency currency) {
-        return new Money(BigDecimal.ZERO, Objects.requireNonNull(currency));
+        if (currency == null)
+            throw new InvalidMoneyException("currency must not be null");
+        return new Money(BigDecimal.ZERO, currency);
     }
 
     public BigDecimal getAmount() {
