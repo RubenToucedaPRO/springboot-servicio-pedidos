@@ -18,11 +18,11 @@ public final class Money {
     private final Currency currency;
 
     public Money(BigDecimal amount, Currency currency) {
+        this.amount = Objects.requireNonNull(amount, "amount must not be null").setScale(2, RoundingMode.HALF_EVEN);
+        this.currency = Objects.requireNonNull(currency, "currency must not be null");
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Amount must not be negative");
         }
-        this.amount = Objects.requireNonNull(amount, "amount must not be null").setScale(2, RoundingMode.HALF_EVEN);
-        this.currency = Objects.requireNonNull(currency, "currency must not be null");
     }
 
     /**

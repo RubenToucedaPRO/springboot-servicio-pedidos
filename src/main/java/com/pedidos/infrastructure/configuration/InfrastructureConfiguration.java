@@ -11,11 +11,9 @@ import org.springframework.context.annotation.Configuration;
 import com.pedidos.application.port.out.Clock;
 import com.pedidos.application.port.out.EventBus;
 import com.pedidos.application.port.out.OrderRepository;
-import com.pedidos.application.port.out.PricingService;
 import com.pedidos.infrastructure.clock.SystemClock;
 import com.pedidos.infrastructure.eventbus.InMemoryEventBus;
 import com.pedidos.infrastructure.persistence.h2.H2OrderRepository;
-import com.pedidos.infrastructure.pricing.InMemoryPricingService;
 import com.pedidos.shared.result.Result;
 
 /**
@@ -48,11 +46,6 @@ public class InfrastructureConfiguration {
             return Result.ok(null);
         });
         return bus;
-    }
-
-    @Bean
-    public PricingService pricingService() {
-        return new InMemoryPricingService();
     }
 
     @Bean

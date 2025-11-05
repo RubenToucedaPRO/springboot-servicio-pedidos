@@ -15,6 +15,5 @@ public interface OrderRepository {
 
     Result<Optional<Order>, AppError> findById(OrderId id);
 
-    // Delete an order by id. Implementations should remove the order and its items.
     Result<Void, AppError> delete(OrderId id);
 }
