@@ -2,6 +2,9 @@ package com.pedidos.application.usecase;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.pedidos.application.dto.ItemDto;
 import com.pedidos.application.dto.OrderDto;
 import com.pedidos.application.errors.AppError;
@@ -17,8 +20,6 @@ import com.pedidos.domain.valueobjects.OrderItem;
 import com.pedidos.domain.valueobjects.ProductId;
 import com.pedidos.domain.valueobjects.Quantity;
 import com.pedidos.shared.result.Result;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Caso de uso: crear un pedido.
@@ -34,7 +35,8 @@ public final class CreateOrderUseCase {
     }
 
     public Result<OrderId, AppError> execute(OrderDto request) {
-        log.debug("CreateOrderUseCase.execute - incoming request itemsCount={}", request == null ? 0 : request.getItems() == null ? 0 : request.getItems().size());
+        log.debug("CreateOrderUseCase.execute - incoming request itemsCount={}",
+                request == null ? 0 : request.getItems() == null ? 0 : request.getItems().size());
         List<ItemDto> items = request.getItems();
         if (items == null || items.isEmpty()) {
             log.warn("CreateOrderUseCase - validation failed: empty items");
@@ -65,7 +67,7 @@ public final class CreateOrderUseCase {
         Result<Void, AppError> saveRes = repository.save(order);
         if (saveRes.isFail())
             log.error("CreateOrderUseCase - failed to save order {}: {}", orderId, saveRes.getError());
-            return Result.fail(saveRes.getError());
+        return Result.fail(saveRes.getError());
 
         // publish events
         List<Object> events = order.pullDomainEvents();
@@ -73,7 +75,7 @@ public final class CreateOrderUseCase {
             Result<Void, AppError> pub = eventBus.publish(ev);
             if (pub.isFail())
                 log.error("CreateOrderUseCase - failed to publish event for order {}: {}", orderId, pub.getError());
-                return Result.fail(pub.getError());
+            return Result.fail(pub.getError());
         }
 
         log.info("CreateOrderUseCase - order created {}", orderId);

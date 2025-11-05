@@ -3,6 +3,9 @@ package com.pedidos.application.usecase;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.pedidos.application.errors.AppError;
 import com.pedidos.application.errors.ValidationError;
 import com.pedidos.application.port.out.EventBus;
@@ -10,8 +13,6 @@ import com.pedidos.application.port.out.OrderRepository;
 import com.pedidos.domain.events.OrderDeletedEvent;
 import com.pedidos.domain.valueobjects.OrderId;
 import com.pedidos.shared.result.Result;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Use case to delete an order by id and publish OrderDeletedEvent.

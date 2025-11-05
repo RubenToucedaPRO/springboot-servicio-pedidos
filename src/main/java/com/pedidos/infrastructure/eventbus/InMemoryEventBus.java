@@ -7,12 +7,13 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.pedidos.application.errors.AppError;
 import com.pedidos.application.errors.InfraError;
 import com.pedidos.application.port.out.EventBus;
 import com.pedidos.shared.result.Result;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * EventBus síncrono en memoria.
@@ -78,7 +79,8 @@ public final class InMemoryEventBus implements EventBus {
                             new NullPointerException("handler returned null")));
                 }
                 if (res.isFail()) {
-                    log.warn("Event handler returned failure for event {}: {}", eventClass.getSimpleName(), res.getError());
+                    log.warn("Event handler returned failure for event {}: {}", eventClass.getSimpleName(),
+                            res.getError());
                     return Result.fail(res.getError());
                 }
             } catch (Exception ex) {
