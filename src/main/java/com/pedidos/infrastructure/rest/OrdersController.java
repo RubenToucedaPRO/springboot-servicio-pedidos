@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.pedidos.application.dto.AddItemToOrderRequestDto;
-import com.pedidos.application.dto.CreateOrderItemDto;
-import com.pedidos.application.dto.CreateOrderRequestDto;
+import com.pedidos.application.dto.ItemDto;
+import com.pedidos.application.dto.ItemToOrderDto;
+import com.pedidos.application.dto.OrderDto;
 import com.pedidos.application.errors.AppError;
 import com.pedidos.application.errors.ConflictError;
 import com.pedidos.application.errors.InfraError;
@@ -94,7 +94,7 @@ public class OrdersController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createOrder(@RequestBody CreateOrderRequestDto body) {
+    public ResponseEntity<?> createOrder(@RequestBody OrderDto body) {
         CreateOrderUseCase uc = new CreateOrderUseCase(repository, eventBus);
         Result<?, AppError> res = uc.execute(body);
         if (res.isOk()) {
@@ -107,12 +107,11 @@ public class OrdersController {
     }
 
     @PostMapping("/{orderId}/items")
-    public ResponseEntity<?> addItem(@PathVariable String orderId, @RequestBody CreateOrderItemDto body) {
+    public ResponseEntity<?> addItem(@PathVariable String orderId, @RequestBody ItemDto body) {
         if (body == null)
             return ResponseEntity.badRequest().body(new ErrorResponse("validation_error", "Invalid body"));
 
-        AddItemToOrderRequestDto req = new AddItemToOrderRequestDto(orderId, body.productId, body.quantity,
-                body.unitPrice, body.currency);
+        ItemToOrderDto req = new ItemToOrderDto(orderId, body);
         AddItemToOrderUseCase uc = new AddItemToOrderUseCase(repository, eventBus);
         Result<?, AppError> res = uc.execute(req);
         if (res.isOk()) {

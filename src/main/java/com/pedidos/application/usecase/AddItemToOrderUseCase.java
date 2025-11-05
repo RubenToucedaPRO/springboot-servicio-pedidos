@@ -2,7 +2,7 @@ package com.pedidos.application.usecase;
 
 import java.util.Optional;
 
-import com.pedidos.application.dto.AddItemToOrderRequestDto;
+import com.pedidos.application.dto.ItemToOrderDto;
 import com.pedidos.application.errors.AppError;
 import com.pedidos.application.errors.NotFoundError;
 import com.pedidos.application.errors.ValidationError;
@@ -29,7 +29,11 @@ public final class AddItemToOrderUseCase {
         this.eventBus = eventBus;
     }
 
-    public Result<OrderId, AppError> execute(AddItemToOrderRequestDto request) {
+    public Result<OrderId, AppError> execute(ItemToOrderDto request) {
+        if (request == null) {
+            return Result.fail(new ValidationError("Missing request"));
+        }
+
         OrderId orderId;
         try {
             orderId = new OrderId(java.util.UUID.fromString(request.orderId));
@@ -37,47 +41,30 @@ public final class AddItemToOrderUseCase {
             return Result.fail(new ValidationError("Invalid order id: " + request.orderId));
         }
 
-        Result<Optional<Order>, AppError> findRes = repository.findById(orderId);
-        if (findRes.isFail())
-            return Result.fail(findRes.getError());
-        Optional<Order> maybe = findRes.getValue();
-        if (maybe.isEmpty())
+        Result<Optional<Order>, AppError> orderSearchResult = repository.findById(orderId);
+        if (orderSearchResult.isFail())
+            return Result.fail(orderSearchResult.getError());
+        Optional<Order> optionalOrder = orderSearchResult.getValue();
+        if (optionalOrder.isEmpty())
             return Result.fail(new NotFoundError("Order not found: " + orderId));
 
-        Order order = maybe.get();
+        Order order = optionalOrder.get();
 
-        if (request.quantity <= 0)
-            return Result.fail(new ValidationError("Quantity must be > 0"));
-
-        ProductId pid;
-        try {
-            pid = new ProductId(request.productId);
-        } catch (Exception e) {
-            return Result.fail(new ValidationError("Invalid product id: " + request.productId));
+        if (request.item == null) {
+            return Result.fail(new ValidationError("Missing item"));
         }
 
-        Currency currency;
+        OrderItem orderItem;
         try {
-            currency = Currency.of(request.currency);
-        } catch (Exception e) {
-            return Result.fail(new ValidationError("Unsupported currency: " + request.currency));
+            ProductId pid = new ProductId(request.item.productId);
+            Quantity qty = new Quantity(request.item.quantity); // VO valida >0
+            Currency cur = Currency.of(request.item.currency);
+            Money price = new Money(request.item.unitPrice, cur);
+            orderItem = new OrderItem(pid, qty, price);
+            order.addItem(orderItem);
+        } catch (IllegalArgumentException | com.pedidos.domain.errors.DomainException e) {
+            return Result.fail(new ValidationError(e.getMessage()));
         }
-
-        Money unitPrice;
-        try {
-            unitPrice = new Money(request.unitPrice, currency);
-        } catch (Exception e) {
-            return Result.fail(new ValidationError("Invalid unit price"));
-        }
-
-        Quantity qty;
-        try {
-            qty = new Quantity(request.quantity);
-        } catch (Exception e) {
-            return Result.fail(new ValidationError("Invalid quantity"));
-        }
-
-        order.addItem(new OrderItem(pid, qty, unitPrice));
 
         Result<Void, AppError> saveRes = repository.save(order);
         if (saveRes.isFail())

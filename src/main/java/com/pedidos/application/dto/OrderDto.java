@@ -7,14 +7,14 @@ import java.util.List;
  * DTO para crear un pedido: lista de líneas con productId, quantity, unitPrice
  * y currency code.
  */
-public final class CreateOrderRequestDto {
-    private final List<CreateOrderItemDto> items;
+public final class OrderDto {
+    private final List<ItemDto> items;
 
-    public CreateOrderRequestDto(List<CreateOrderItemDto> items) {
+    public OrderDto(List<ItemDto> items) {
         this.items = items == null ? Collections.emptyList() : Collections.unmodifiableList(items);
     }
 
-    public List<CreateOrderItemDto> getItems() {
+    public List<ItemDto> getItems() {
         return items;
     }
 }

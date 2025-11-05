@@ -7,16 +7,16 @@ import java.math.BigDecimal;
  * Usado por CreateOrderRequestDto y por el endpoint de añadir item.
  * Campos públicos para facilitar la deserialización por Jackson.
  */
-public final class CreateOrderItemDto {
+public final class ItemDto {
     public String productId;
     public Integer quantity;
     public BigDecimal unitPrice;
     public String currency;
 
-    public CreateOrderItemDto() {
+    public ItemDto() {
     }
 
-    public CreateOrderItemDto(String productId, Integer quantity, BigDecimal unitPrice, String currency) {
+    public ItemDto(String productId, Integer quantity, BigDecimal unitPrice, String currency) {
         this.productId = productId;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
