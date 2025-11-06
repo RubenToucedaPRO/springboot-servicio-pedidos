@@ -1,19 +1,36 @@
-package com.pedidos.infrastructure.persistence.jpa;
+package com.pedidos.infrastructure.adapter.persistence.entity;
 
-/**
- * Deprecated placeholder. The JPA entity was moved to
- * `com.pedidos.infrastructure.adapter.persistence.entity.OrderItemEntity`.
- *
- * This class intentionally lacks JPA annotations to avoid duplicate mapping
- * while the codebase is being migrated. Do not use; prefer the adapter entity.
- */
-@Deprecated
+import java.math.BigDecimal;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "order_items")
 public class OrderItemEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
     private OrderEntity order;
+
+    @Column(name = "product_id")
     private String productId;
+
     private int quantity;
-    private java.math.BigDecimal unitAmount;
+
+    @Column(name = "unit_amount")
+    private BigDecimal unitAmount;
+
     private String currency;
 
     public OrderItemEntity() {
@@ -47,11 +64,11 @@ public class OrderItemEntity {
         this.quantity = quantity;
     }
 
-    public java.math.BigDecimal getUnitAmount() {
+    public BigDecimal getUnitAmount() {
         return unitAmount;
     }
 
-    public void setUnitAmount(java.math.BigDecimal unitAmount) {
+    public void setUnitAmount(BigDecimal unitAmount) {
         this.unitAmount = unitAmount;
     }
 

@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.pedidos.application.errors.AppError;
+import com.pedidos.application.errors.InfraError;
 import com.pedidos.application.errors.ValidationError;
 import com.pedidos.application.port.out.EventBus;
 import com.pedidos.application.port.out.OrderRepository;
@@ -46,7 +47,13 @@ public class DeleteOrderUseCase {
 
         OrderId oid = new OrderId(uuid);
 
-        Result<Void, AppError> delRes = repository.delete(oid);
+        Result<Void, AppError> delRes;
+        try {
+            delRes = repository.delete(oid);
+        } catch (RuntimeException e) {
+            log.error("DeleteOrderUseCase - exception deleting order {}: {}", oid, e.getMessage());
+            return Result.fail(new InfraError("Failed to delete order: " + e.getMessage(), e));
+        }
         if (delRes.isFail()) {
             log.error("DeleteOrderUseCase - failed to delete order {}: {}", oid, delRes.getError());
             return Result.fail(delRes.getError());

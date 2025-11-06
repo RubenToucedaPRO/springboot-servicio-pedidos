@@ -13,6 +13,8 @@ import com.pedidos.shared.result.Result;
 public interface OrderRepository {
     Result<Void, AppError> save(Order order);
 
+    Result<Void, AppError> update(Order order);
+
     Result<Optional<Order>, AppError> findById(OrderId id);
 
     Result<Void, AppError> delete(OrderId id);

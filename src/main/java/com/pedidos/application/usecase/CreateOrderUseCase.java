@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import com.pedidos.application.dto.ItemDto;
 import com.pedidos.application.dto.OrderDto;
 import com.pedidos.application.errors.AppError;
+import com.pedidos.application.errors.InfraError;
 import com.pedidos.application.errors.ValidationError;
 import com.pedidos.application.port.out.EventBus;
 import com.pedidos.application.port.out.OrderRepository;
@@ -68,7 +69,13 @@ public final class CreateOrderUseCase {
         }
 
         // persist
-        Result<Void, AppError> saveRes = repository.save(order);
+        Result<Void, AppError> saveRes;
+        try {
+            saveRes = repository.save(order);
+        } catch (RuntimeException e) {
+            log.error("CreateOrderUseCase - exception saving order {}: {}", orderId, e.getMessage());
+            return Result.fail(new InfraError("Failed to save order: " + e.getMessage(), e));
+        }
         if (saveRes.isFail()) {
             log.error("CreateOrderUseCase - failed to save order {}: {}", orderId, saveRes.getError());
             return Result.fail(saveRes.getError());

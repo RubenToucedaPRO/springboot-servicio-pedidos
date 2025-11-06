@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.pedidos.application.dto.ItemToOrderDto;
 import com.pedidos.application.errors.AppError;
+import com.pedidos.application.errors.InfraError;
 import com.pedidos.application.errors.NotFoundError;
 import com.pedidos.application.errors.ValidationError;
 import com.pedidos.application.port.out.EventBus;
@@ -78,10 +79,16 @@ public final class AddItemToOrderUseCase {
             return Result.fail(new ValidationError(e.getMessage()));
         }
 
-        Result<Void, AppError> saveRes = repository.save(order);
-        if (saveRes.isFail()) {
-            log.error("AddItemToOrderUseCase - failed to save order {}: {}", orderId, saveRes.getError());
-            return Result.fail(saveRes.getError());
+        Result<Void, AppError> updateRes;
+        try {
+            updateRes = repository.update(order);
+        } catch (RuntimeException e) {
+            log.error("AddItemToOrderUseCase - exception updating order {}: {}", orderId, e.getMessage());
+            return Result.fail(new InfraError("Failed to update order: " + e.getMessage(), e));
+        }
+        if (updateRes.isFail()) {
+            log.error("AddItemToOrderUseCase - failed to update order {}: {}", orderId, updateRes.getError());
+            return Result.fail(updateRes.getError());
         }
 
         for (Object ev : order.pullDomainEvents()) {

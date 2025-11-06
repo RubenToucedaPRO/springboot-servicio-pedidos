@@ -13,6 +13,7 @@ import javax.sql.DataSource;
 
 import com.pedidos.application.errors.AppError;
 import com.pedidos.application.errors.InfraError;
+import com.pedidos.application.errors.NotFoundError;
 import com.pedidos.application.port.out.OrderRepository;
 import com.pedidos.domain.entities.Order;
 import com.pedidos.domain.valueobjects.Currency;
@@ -98,6 +99,92 @@ public class H2OrderRepository implements OrderRepository {
         } catch (SQLException e) {
             log.error("H2OrderRepository.save - failed to save order {}: {}", order.getId(), e.toString());
             return Result.fail(new InfraError("Failed to save order: " + e.getMessage(), e));
+        }
+    }
+
+    @Override
+    public Result<Void, AppError> update(Order order) {
+        log.debug("H2OrderRepository.update - orderId={} items={}", order.getId(), order.getItems().size());
+        String sqlExists = "SELECT 1 FROM orders WHERE id = ?";
+        String sqlMergeOrder = "MERGE INTO orders (id, created_at) KEY(id) VALUES (?, ?)";
+        String sqlMergeItem = "MERGE INTO order_items (order_id, product_id, quantity, unit_amount, currency) KEY(order_id, product_id) VALUES (?,?,?,?,?)";
+        String sqlDeleteExtraPrefix = "DELETE FROM order_items WHERE order_id = ? AND product_id NOT IN (";
+
+        try (Connection c = dataSource.getConnection()) {
+            boolean oldAuto = c.getAutoCommit();
+            c.setAutoCommit(false);
+            try {
+                // check exists
+                try (PreparedStatement p = c.prepareStatement(sqlExists)) {
+                    p.setString(1, order.getId().getId().toString());
+                    try (ResultSet rs = p.executeQuery()) {
+                        if (!rs.next()) {
+                            c.rollback();
+                            return Result.fail(new NotFoundError("Order not found: " + order.getId()));
+                        }
+                    }
+                }
+
+                // upsert order header
+                try (PreparedStatement pOrder = c.prepareStatement(sqlMergeOrder)) {
+                    pOrder.setString(1, order.getId().getId().toString());
+                    pOrder.setTimestamp(2, Timestamp.from(Instant.now()));
+                    pOrder.executeUpdate();
+                }
+
+                // upsert items
+                try (PreparedStatement pm = c.prepareStatement(sqlMergeItem)) {
+                    for (OrderItem it : order.getItems()) {
+                        pm.setString(1, order.getId().getId().toString());
+                        pm.setString(2, it.getProductId().getId());
+                        pm.setInt(3, it.getQuantity().getValue());
+                        pm.setBigDecimal(4, it.getUnitPrice().getAmount());
+                        pm.setString(5, it.getUnitPrice().getCurrency().getCode());
+                        pm.addBatch();
+                    }
+                    pm.executeBatch();
+                }
+
+                // delete items removed from aggregate
+                if (order.getItems() != null && !order.getItems().isEmpty()) {
+                    String placeholders = String.join(",", java.util.Collections.nCopies(order.getItems().size(), "?"));
+                    String sqlDeleteExtra = sqlDeleteExtraPrefix + placeholders + ")";
+                    try (PreparedStatement pd = c.prepareStatement(sqlDeleteExtra)) {
+                        pd.setString(1, order.getId().getId().toString());
+                        int idx = 2;
+                        for (OrderItem it : order.getItems()) {
+                            pd.setString(idx++, it.getProductId().getId());
+                        }
+                        pd.executeUpdate();
+                    }
+                } else {
+                    // if no items, remove all items
+                    try (PreparedStatement pDel = c.prepareStatement("DELETE FROM order_items WHERE order_id = ?")) {
+                        pDel.setString(1, order.getId().getId().toString());
+                        pDel.executeUpdate();
+                    }
+                }
+
+                c.commit();
+                c.setAutoCommit(oldAuto);
+                log.info("H2OrderRepository.update - updated order {}", order.getId());
+                return Result.ok(null);
+            } catch (SQLException e) {
+                try {
+                    c.rollback();
+                } catch (SQLException ignore) {
+                }
+                log.error("H2OrderRepository.update - failed to update order {}: {}", order.getId(), e.toString());
+                return Result.fail(new InfraError("Failed to update order: " + e.getMessage(), e));
+            } finally {
+                try {
+                    c.setAutoCommit(oldAuto);
+                } catch (SQLException ignore) {
+                }
+            }
+        } catch (SQLException e) {
+            log.error("H2OrderRepository.update - connection error for {}: {}", order.getId(), e.toString());
+            return Result.fail(new InfraError("Failed to open DB connection: " + e.getMessage(), e));
         }
     }
 
