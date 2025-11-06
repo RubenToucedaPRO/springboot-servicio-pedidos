@@ -1,6 +1,6 @@
 # SpringBoot-Servicio-Pedidos
 
-Estructura inicial del proyecto siguiendo Clean Architecture.
+Estructura del proyecto siguiendo Clean Architecture.
 
 Paquetes principales:
 - `domain` (entidades, value-objects, errores, eventos)
@@ -8,17 +8,48 @@ Paquetes principales:
 - `infrastructure` (adaptadores: persistence, rest, configuración)
 - `shared` (utilidades, excepciones)
 
-Nota de actualización
 ---------------------
-Este proyecto ha sido actualizado para usar Java 21 (LTS) y Spring Boot 3.2.12.
+Este proyecto usa Java 21 (LTS) y Spring Boot 3.2.12.
 
-- Java: ahora se requiere Java 21 (LTS). Asegúrate de tener JDK 21 instalado y activo en tu entorno.
-- Spring Boot: el parent fue actualizado a `spring-boot-starter-parent` 3.2.12 para compatibilidad con Java 21 y Spring Framework 6 / Jakarta.
+- Java: se requiere JDK 21.
+- Spring Boot: parent `spring-boot-starter-parent` 3.2.12 (compatible con Spring Framework 6 / Jakarta).
 
-Consejos rápidos tras la migración:
+## Estructura del Proyecto (Paquetes)
 
-- Recomendación: usa SDKMAN o la instalación de tu distribución para gestionar JDKs y dejar Java 21 como predeterminado durante el desarrollo.
-- Revisa integraciones externas o librerías que dependan de `javax.*`; con Spring Boot 3 / Spring Framework 6 es posible que debas migrar a paquetes `jakarta.*` si no se ha hecho ya.
+```
+src/main/java/com/pedidos/
+│
+├── domain/                 # Núcleo de negocio
+│   ├── entities/           # Entidades con identidad y comportamiento (ej: Order)
+│   ├── valueobjects/       # Value Objects inmutables y validaciones (Money, Quantity...)
+│   ├── events/             # Eventos del dominio
+│   └── errors/             # Excepciones y errores del dominio
+│
+├── application/            # Casos de uso, DTOs y puertos
+│   ├── usecase/            # Casos de uso (ej: CreateOrderUseCase)
+│   ├── dto/                # DTOs de la capa de aplicación
+│   └── port/
+│       ├── in/             # Interfaces de entrada (use cases)
+│       └── out/            # Interfaces de salida (repositorios, APIs externas)
+│
+├── infrastructure/         # Implementaciones tecnológicas (adaptadores)
+│   ├── adapter/            # Contiene adaptadores (implementaciones concretas de puertos)
+│   │   └── persistence/    # Adaptadores de persistencia agrupados por tecnología
+│   │       ├── entity/     # Entidades JPA (OrderEntity, OrderItemEntity)
+│   │       ├── jpa/        # Adaptador JPA: Spring Data repo + adapter
+│   │       │   ├── JpaOrderRepository.java
+│   │       │   └── SpringDataOrderRepositoryAdapter.java
+│   │       └── h2/         # Adaptador H2/JDBC: H2OrderRepository
+│   ├── rest/               # Controladores REST, DTOs y mapeadores
+│   ├── configuration/      # Beans, wiring, propiedades
+│   └── external/           # Integraciones externas (APIs, colas, email)
+│
+├── shared/                 # Excepciones, utilidades, constantes compartidas
+└── resources/              # `src/main/resources` (application.yml, migrations, etc.)
+
+// Tests:
+src/test/java/com/pedidos/{domain,application,infrastructure}  # tests unitarios e integración
+
 
 ## Comandos útiles
 
@@ -75,25 +106,45 @@ java -jar -Dspring.profiles.active=dev target/pedidos-0.0.1-SNAPSHOT.jar
 ```
 
 ## Modo desarrollo (dev)
+Puedes probar contra Postgres en local durante el desarrollo creando un archivo `.env` en la raíz del proyecto. El proyecto usa `java-dotenv` en dev y leerá `.env` automáticamente cuando exista.
 
-Usa el perfil `dev` para ejecutar la aplicación con H2 en memoria y reinicio automático (devtools).
+Ejemplo mínimo de `.env` (archivo en la raíz del proyecto):
 
+```bash
+# .env
+DB_KIND=POSTGRES
+DB_URL=jdbc:postgresql://localhost:5432/pedidos
+DB_USER=postgres
+DB_PASS=postgres
+```
+
+Usa el perfil `dev` para ejecutar la aplicación sin .env con H2 en memoria y reinicio automático (devtools). En caso de usar  el `.env` con H2 modifica `DB_KIND`:
+
+```bash
+# .env
+DB_KIND=H2
+DB_URL=jdbc:postgresql://localhost:5432/pedidos
+DB_USER=postgres
+DB_PASS=postgres
+```
+	- H2 console (por defecto cuando el perfil `dev` está activo):
+
+      - URL: http://localhost:8080/h2-console
+      - JDBC URL: jdbc:h2:mem:pedidos
+      - Usuario: sa  (sin contraseña por defecto)
+
+Comandos para ejecutar en modo dev::
 ```bash
 mvn -Dspring-boot.run.profiles=dev spring-boot:run
 ```
 
+O construir y ejecutar el JAR en modo dev:
 ```bash
 # construir primero
 mvn clean package -DskipTests
 
 java -Dspring.profiles.active=dev -jar target/pedidos-0.0.1-SNAPSHOT.jar
 ```
-
-- H2 console (por defecto cuando el perfil `dev` está activo):
-
-	- URL: http://localhost:8080/h2-console
-	- JDBC URL: jdbc:h2:mem:pedidos
-	- Usuario: sa  (sin contraseña por defecto)
 
 - Ejecutar con reinicio automático y habilitar debug remoto (opcional):
 
@@ -106,33 +157,10 @@ mvn -Dspring-boot.run.profiles=dev \
 Notas rápidas:
 
 - `spring-boot-devtools` está incluido en `pom.xml` en scope `runtime` y permite reinicio automático cuando cambias código fuente.
-- Si quieres persistencia H2 en disco durante el desarrollo cambia la URL en `application-dev.yml` (p.ej. `jdbc:h2:file:./data/pedidos`).
 - Para ver SQL en consola ya está configurado `spring.jpa.show-sql=true` en `application-dev.yml`.
 
-## Modo desarrollo con Postgres (usar `.env`)
 
-Si prefieres probar contra Postgres en local durante el desarrollo puedes crear un archivo `.env` en la raíz del proyecto o exportar las variables de entorno. El proyecto usa `java-dotenv` en dev y leerá `.env` automáticamente cuando exista.
-
-Ejemplo mínimo de `.env` (archivo en la raíz del proyecto):
-
-```bash
-# .env
-DB_KIND=POSTGRES
-DB_URL=jdbc:postgresql://localhost:5432/pedidos
-DB_USER=postgres
-DB_PASS=secret
-```
-
-Comandos para ejecutar usando ese `.env` (no hace falta pasar credenciales por la línea de comandos):
-
-```bash
-# Construir
-mvn clean package -DskipTests
-
-# Ejecutar en dev (la configuración dev lee .env si existe)
-mvn -Dspring-boot.run.profiles=dev spring-boot:run
-
-# O ejecutar el JAR (asegúrate de tener .env presente en el directorio de trabajo)
+## O ejecutar el JAR (asegúrate de tener .env presente en el directorio de trabajo)
 java -Dspring.profiles.active=dev -jar target/pedidos-0.0.1-SNAPSHOT.jar
 ```
 
@@ -142,7 +170,7 @@ También puedes exportar variables si no quieres usar `.env`:
 export DB_KIND=POSTGRES
 export DB_URL=jdbc:postgresql://localhost:5432/pedidos
 export DB_USER=postgres
-export DB_PASS=secret
+export DB_PASS=postgres
 mvn -Dspring-boot.run.profiles=dev spring-boot:run
 ```
 
@@ -174,19 +202,10 @@ export SPRING_DATASOURCE_PASSWORD=prod_secret
 java -Dspring.profiles.active=prod -jar target/pedidos-0.0.1-SNAPSHOT.jar
 ```
 
-Consejos de seguridad y despliegue:
-
-- No pongas contraseñas en control de versiones; usa gestores de secretos del proveedor (Azure Key Vault, AWS Secrets Manager, HashiCorp Vault) o variables de entorno proporcionadas por el entorno de ejecución.
-- Ajusta el pool Hikari en `application-prod.yml` si necesitas mayor rendimiento.
-
-## Archivos útiles
-
-- `.env.example` — ejemplo de `.env` para desarrollo con Postgres (ya incluido en la raíz del proyecto).
-- `src/main/resources/application-prod.yml` — ejemplo de propiedades para producción (Postgres).
 
 ## Probar Postgres local con Docker Compose
 
-Si no tienes Postgres instalado localmente, puedes levantar uno rápido con Docker Compose que use los mismos valores de conexión que el proyecto por defecto.
+Puedes levantar uno rápido con Docker Compose que use los mismos valores de conexión que el proyecto por defecto.
 
 Archivo `docker-compose.yml` (incluido en la raíz del proyecto):
 
@@ -218,7 +237,7 @@ docker-compose logs -f postgres
 docker-compose down -v
 ```
 
-### pgAdmin (opcional)
+### pgAdmin
 
 Si prefieres usar una interfaz gráfica para explorar la base de datos, este repositorio incluye un servicio `pgadmin` en `docker-compose.yml`.
 
@@ -240,11 +259,3 @@ java -Dspring.profiles.active=dev -jar target/pedidos-0.0.1-SNAPSHOT.jar
 ```
 
 Nota: el `dataSourceDev()` detecta `DB_KIND=POSTGRES` si quieres usar `.env` en lugar de depender de los valores por defecto; de lo contrario, el Postgres levantado por Docker escuchará en `localhost:5432` y `dataSourceDev()` usará esa URL si configuras `DB_URL` en `.env`.
-
-Si quieres, puedo:
-
-- A: Añadir un `.env.example` (si quieres otro formato o valores diferentes).
-- B: Añadir una migración básica con Flyway para crear las tablas iniciales en Postgres.
-- C: Incluir un pequeño script de `docker-compose.yml` para levantar Postgres localmente y probar.
-
-Indícame cuál de esas opciones prefieres y la implemento.

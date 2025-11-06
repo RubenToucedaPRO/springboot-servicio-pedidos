@@ -130,5 +130,3 @@ Notas finales
 Archivo relacionado en este repo:
 
 - `Pedidos.postman_collection.json` (colección Postman adjunta)
-
-Creado automáticamente — fin del README.

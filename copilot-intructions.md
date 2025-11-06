@@ -21,20 +21,26 @@ Copilot debe proponer y mantener la siguiente estructura (ejemplo con package ba
 src/main/java/com/pedidos/
 │
 ├── domain/                 # Núcleo de negocio
-│   ├── entities/           # Entidades con identidad y comportamiento
-│   ├── valueobjects/       # Value Objects inmutables y validaciones
+│   ├── entities/           # Entidades con identidad y comportamiento (ej: Order)
+│   ├── valueobjects/       # Value Objects inmutables y validaciones (Money, Quantity...)
 │   ├── events/             # Eventos del dominio
 │   └── errors/             # Excepciones y errores del dominio
 │
 ├── application/            # Casos de uso, DTOs y puertos
 │   ├── usecase/            # Casos de uso (ej: CreateOrderUseCase)
-│   ├── dto/                # DTOs de la capa de aplicación (comunicaciones entre capas)
+│   ├── dto/                # DTOs de la capa de aplicación
 │   └── port/
 │       ├── in/             # Interfaces de entrada (use cases)
 │       └── out/            # Interfaces de salida (repositorios, APIs externas)
 │
 ├── infrastructure/         # Implementaciones tecnológicas (adaptadores)
-│   ├── persistence/        # Adaptadores de BD (JPA, JDBC…)
+│   ├── adapter/            # Contiene adaptadores (implementaciones concretas de puertos)
+│   │   └── persistence/    # Adaptadores de persistencia agrupados por tecnología
+│   │       ├── entity/     # Entidades JPA (OrderEntity, OrderItemEntity)
+│   │       ├── jpa/        # Adaptador JPA: Spring Data repo + adapter
+│   │       │   ├── JpaOrderRepository.java
+│   │       │   └── SpringDataOrderRepositoryAdapter.java
+│   │       └── h2/         # Adaptador H2/JDBC: H2OrderRepository
 │   ├── rest/               # Controladores REST, DTOs y mapeadores
 │   ├── configuration/      # Beans, wiring, propiedades
 │   └── external/           # Integraciones externas (APIs, colas, email)
@@ -43,10 +49,10 @@ src/main/java/com/pedidos/
 └── resources/              # `src/main/resources` (application.yml, migrations, etc.)
 
 // Tests:
-src/test/java/com/example/pedidos/{domain,application,infrastructure}  # tests unitarios e integración
+src/test/java/com/pedidos/{domain,application,infrastructure}  # tests unitarios e integración
 ```
 
-**Regla:** Ningún paquete interno importa nada de uno externo.
+**Regla:** Ningún paquete interno importa nada de uno externo. Mantén el dominio y la capa de aplicación libres de dependencias de Spring/JPA.
 
 ---
 
