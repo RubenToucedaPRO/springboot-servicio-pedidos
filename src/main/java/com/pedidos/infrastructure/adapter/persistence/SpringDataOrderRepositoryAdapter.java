@@ -50,6 +50,7 @@ public class SpringDataOrderRepositoryAdapter implements OrderRepository {
         String idStr = Objects.requireNonNull(uuid.toString(), "order id string is null");
         Optional<OrderEntity> ent = jpa.findById(idStr);
         return Result.ok(ent.map(this::toDomain));
+
     }
 
     @Override
