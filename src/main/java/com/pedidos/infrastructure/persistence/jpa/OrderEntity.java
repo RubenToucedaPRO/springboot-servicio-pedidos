@@ -1,27 +1,18 @@
 package com.pedidos.infrastructure.persistence.jpa;
 
-import java.time.Instant;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-
-@Entity
-@Table(name = "orders")
+/**
+ * Deprecated placeholder. The JPA entity was moved to
+ * `com.pedidos.infrastructure.adapter.persistence.entity.OrderEntity`.
+ *
+ * This class is intentionally non-annotated to avoid duplicate JPA mapping
+ * during the refactor. Do not use; it exists to keep old references compiling
+ * until callers are migrated to the adapter package.
+ */
+@Deprecated
 public class OrderEntity {
-    @Id
     private String id;
-
-    @Column(name = "created_at")
-    private Instant createdAt;
-
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<OrderItemEntity> items = new LinkedHashSet<>();
+    private java.time.Instant createdAt;
+    private java.util.Set<OrderItemEntity> items = new java.util.LinkedHashSet<>();
 
     public OrderEntity() {
     }
@@ -34,19 +25,19 @@ public class OrderEntity {
         this.id = id;
     }
 
-    public Instant getCreatedAt() {
+    public java.time.Instant getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Instant createdAt) {
+    public void setCreatedAt(java.time.Instant createdAt) {
         this.createdAt = createdAt;
     }
 
-    public Set<OrderItemEntity> getItems() {
+    public java.util.Set<OrderItemEntity> getItems() {
         return items;
     }
 
-    public void setItems(Set<OrderItemEntity> items) {
+    public void setItems(java.util.Set<OrderItemEntity> items) {
         this.items = items;
     }
 
