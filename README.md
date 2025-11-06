@@ -257,5 +257,3 @@ mvn -Dspring-boot.run.profiles=dev spring-boot:run
 mvn clean package -DskipTests
 java -Dspring.profiles.active=dev -jar target/pedidos-0.0.1-SNAPSHOT.jar
 ```
-
-Nota: el `dataSourceDev()` detecta `DB_KIND=POSTGRES` si quieres usar `.env` en lugar de depender de los valores por defecto; de lo contrario, el Postgres levantado por Docker escuchará en `localhost:5432` y `dataSourceDev()` usará esa URL si configuras `DB_URL` en `.env`.
