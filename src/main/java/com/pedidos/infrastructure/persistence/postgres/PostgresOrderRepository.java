@@ -101,7 +101,7 @@ public class PostgresOrderRepository implements OrderRepository {
     public Result<Optional<Order>, AppError> findById(OrderId id) {
         String sqlOrder = "SELECT id, created_at FROM orders WHERE id = ?";
         String sqlItems = "SELECT product_id, quantity, unit_amount, currency FROM order_items WHERE order_id = ? ORDER BY product_id";
-
+        // Consultar order y si existe
         try (Connection c = dataSource.getConnection()) {
             try (PreparedStatement p = c.prepareStatement(sqlOrder)) {
                 p.setString(1, id.getId().toString());
@@ -113,7 +113,7 @@ public class PostgresOrderRepository implements OrderRepository {
             }
 
             Order order = Order.create(id);
-
+            // Si existe, cargar items
             try (PreparedStatement pItems = c.prepareStatement(sqlItems)) {
                 pItems.setString(1, id.getId().toString());
                 try (ResultSet rs = pItems.executeQuery()) {

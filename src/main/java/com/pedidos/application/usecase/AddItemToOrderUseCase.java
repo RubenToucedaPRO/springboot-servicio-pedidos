@@ -50,10 +50,11 @@ public final class AddItemToOrderUseCase {
         }
 
         Result<Optional<Order>, AppError> orderSearchResult = repository.findById(orderId);
-        if (orderSearchResult.isFail())
+        if (orderSearchResult.isFail()) {
             log.error("AddItemToOrderUseCase - repository.findById failed for {}: {}", orderId,
                     orderSearchResult.getError());
-        return Result.fail(orderSearchResult.getError());
+            return Result.fail(orderSearchResult.getError());
+        }
         Optional<Order> optionalOrder = orderSearchResult.getValue();
         if (optionalOrder.isEmpty())
             return Result.fail(new NotFoundError("Order not found: " + orderId));
@@ -78,16 +79,18 @@ public final class AddItemToOrderUseCase {
         }
 
         Result<Void, AppError> saveRes = repository.save(order);
-        if (saveRes.isFail())
+        if (saveRes.isFail()) {
             log.error("AddItemToOrderUseCase - failed to save order {}: {}", orderId, saveRes.getError());
-        return Result.fail(saveRes.getError());
+            return Result.fail(saveRes.getError());
+        }
 
         for (Object ev : order.pullDomainEvents()) {
             Result<Void, AppError> pub = eventBus.publish(ev);
-            if (pub.isFail())
+            if (pub.isFail()) {
                 log.error("AddItemToOrderUseCase - event publish failed for order {}: {}", orderId,
                         pub.getError());
-            return Result.fail(pub.getError());
+                return Result.fail(pub.getError());
+            }
         }
 
         log.info("AddItemToOrderUseCase - item added to order {}", orderId);

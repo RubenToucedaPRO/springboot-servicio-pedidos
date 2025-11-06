@@ -37,6 +37,10 @@ public final class CreateOrderUseCase {
     public Result<OrderId, AppError> execute(OrderDto request) {
         log.debug("CreateOrderUseCase.execute - incoming request itemsCount={}",
                 request == null ? 0 : request.getItems() == null ? 0 : request.getItems().size());
+        if (request == null) {
+            log.warn("CreateOrderUseCase - missing request");
+            return Result.fail(new ValidationError("Missing request"));
+        }
         List<ItemDto> items = request.getItems();
         if (items == null || items.isEmpty()) {
             log.warn("CreateOrderUseCase - validation failed: empty items");
@@ -65,17 +69,19 @@ public final class CreateOrderUseCase {
 
         // persist
         Result<Void, AppError> saveRes = repository.save(order);
-        if (saveRes.isFail())
+        if (saveRes.isFail()) {
             log.error("CreateOrderUseCase - failed to save order {}: {}", orderId, saveRes.getError());
-        return Result.fail(saveRes.getError());
+            return Result.fail(saveRes.getError());
+        }
 
         // publish events
         List<Object> events = order.pullDomainEvents();
         for (Object ev : events) {
             Result<Void, AppError> pub = eventBus.publish(ev);
-            if (pub.isFail())
+            if (pub.isFail()) {
                 log.error("CreateOrderUseCase - failed to publish event for order {}: {}", orderId, pub.getError());
-            return Result.fail(pub.getError());
+                return Result.fail(pub.getError());
+            }
         }
 
         log.info("CreateOrderUseCase - order created {}", orderId);

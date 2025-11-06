@@ -37,7 +37,7 @@ public class InfrastructureConfiguration {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
         String dbKind = getenvOrDotenv("DB_KIND", dotenv, "H2");
-
+        // Support POSTGRES or H2 (default)
         if ("POSTGRES".equalsIgnoreCase(dbKind)) {
             String url = getenvOrDotenv("DB_URL", dotenv, "jdbc:postgresql://localhost:5432/pedidos");
             String user = getenvOrDotenv("DB_USER", dotenv, "postgres");
@@ -51,7 +51,7 @@ public class InfrastructureConfiguration {
                 ds.setPassword(pass);
             return ds;
         }
-
+        // Default to H2 in-memory database
         JdbcDataSource ds = new JdbcDataSource();
         ds.setURL("jdbc:h2:mem:pedidos;DB_CLOSE_DELAY=-1;MODE=PostgreSQL");
         ds.setUser("sa");
@@ -64,7 +64,7 @@ public class InfrastructureConfiguration {
     public DataSource dataSourceProd(Environment env) {
         // In production prefer Spring properties (application-prod.yml or env vars)
         String url = env.getProperty("spring.datasource.url");
-        String user = env.getProperty("spring.datasource.username", env.getProperty("spring.datasource.user"));
+        String user = env.getProperty("spring.datasource.username");
         String pass = env.getProperty("spring.datasource.password");
         String driver = env.getProperty("spring.datasource.driver-class-name", "org.postgresql.Driver");
 
