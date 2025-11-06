@@ -1,4 +1,4 @@
-package com.pedidos.infrastructure.persistence.h2;
+package com.pedidos.infrastructure.adapter.persistence.h2;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -147,7 +147,9 @@ public class H2OrderRepository implements OrderRepository {
 
                 // delete items removed from aggregate
                 if (order.getItems() != null && !order.getItems().isEmpty()) {
-                    String placeholders = String.join(",", java.util.Collections.nCopies(order.getItems().size(), "?"));
+                    String placeholders = String.join(
+                            ",",
+                            java.util.Collections.nCopies(order.getItems().size(), "?"));
                     String sqlDeleteExtra = sqlDeleteExtraPrefix + placeholders + ")";
                     try (PreparedStatement pd = c.prepareStatement(sqlDeleteExtra)) {
                         pd.setString(1, order.getId().getId().toString());
