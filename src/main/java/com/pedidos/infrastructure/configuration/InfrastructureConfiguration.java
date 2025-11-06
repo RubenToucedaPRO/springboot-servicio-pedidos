@@ -15,11 +15,11 @@ import org.springframework.core.env.Environment;
 import com.pedidos.application.port.out.Clock;
 import com.pedidos.application.port.out.EventBus;
 import com.pedidos.application.port.out.OrderRepository;
-import com.pedidos.infrastructure.adapter.persistence.JpaOrderRepository;
-import com.pedidos.infrastructure.adapter.persistence.SpringDataOrderRepositoryAdapter;
+import com.pedidos.infrastructure.adapter.persistence.h2.H2OrderRepository;
+import com.pedidos.infrastructure.adapter.persistence.jpa.JpaOrderRepository;
+import com.pedidos.infrastructure.adapter.persistence.jpa.SpringDataOrderRepositoryAdapter;
 import com.pedidos.infrastructure.clock.SystemClock;
 import com.pedidos.infrastructure.eventbus.InMemoryEventBus;
-import com.pedidos.infrastructure.persistence.h2.H2OrderRepository;
 import com.pedidos.shared.result.Result;
 
 import io.github.cdimascio.dotenv.Dotenv;
