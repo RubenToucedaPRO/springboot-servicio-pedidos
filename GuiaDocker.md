@@ -145,7 +145,7 @@ mvn clean package -DskipTests
 java -Dspring.profiles.active=dev -jar target/pedidos-0.0.1-SNAPSHOT.jar
 ```
 
-Al arrancar, el repositorio Postgres (`PostgresOrderRepository`) intentará crear las tablas necesarias si no existen, así que normalmente no necesitas ejecutar migraciones manuales para pruebas locales (aunque para producción es recomendable usar Flyway/Liquibase).
+Al arrancar, el adaptador de persistencia (H2 o JPA) intentará crear las tablas necesarias si no existen, así que normalmente no necesitas ejecutar migraciones manuales para pruebas locales (aunque para producción es recomendable usar Flyway/Liquibase).
 
 ---
 
