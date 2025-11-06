@@ -18,7 +18,8 @@ import com.pedidos.application.port.out.OrderRepository;
 import com.pedidos.infrastructure.clock.SystemClock;
 import com.pedidos.infrastructure.eventbus.InMemoryEventBus;
 import com.pedidos.infrastructure.persistence.h2.H2OrderRepository;
-import com.pedidos.infrastructure.persistence.postgres.PostgresOrderRepository;
+import com.pedidos.infrastructure.persistence.jpa.JpaOrderRepository;
+import com.pedidos.infrastructure.persistence.jpa.SpringDataOrderRepositoryAdapter;
 import com.pedidos.shared.result.Result;
 
 import io.github.cdimascio.dotenv.Dotenv;
@@ -79,21 +80,35 @@ public class InfrastructureConfiguration {
 
     @Bean
     @Profile("!prod")
-    public OrderRepository orderRepositoryDev(DataSource dataSource) {
+    public OrderRepository orderRepositoryDev(DataSource dataSource, java.util.Optional<JpaOrderRepository> jpaRepo) {
         Objects.requireNonNull(dataSource);
-        // If the dev DataSource is actually a Postgres DS (when DB_KIND=POSTGRES)
-        // prefer the Postgres adapter
-        if (dataSource instanceof PGSimpleDataSource) {
-            return new PostgresOrderRepository(dataSource);
+        // If JPA repository bean exists (JPA on classpath and entities enabled),
+        // use the Spring Data adapter automatically.
+        if (jpaRepo != null && jpaRepo.isPresent()) {
+            return new SpringDataOrderRepositoryAdapter(jpaRepo.get());
         }
+
+        // If DB_KIND requests Postgres but JPA is not available, fail early.
+        if (dataSource instanceof PGSimpleDataSource) {
+            throw new IllegalStateException(
+                    "Detected Postgres DataSource in dev but JPA is not available. Add 'spring-boot-starter-data-jpa' or set DB_KIND=H2 in .env");
+        }
+
         return new H2OrderRepository(dataSource);
     }
 
     @Bean
     @Profile("prod")
-    public OrderRepository orderRepositoryProd(DataSource dataSource) {
+    public OrderRepository orderRepositoryProd(DataSource dataSource, java.util.Optional<JpaOrderRepository> jpaRepo,
+            Environment env) {
         Objects.requireNonNull(dataSource);
-        return new PostgresOrderRepository(dataSource);
+        // Prefer JPA adapter in production if available
+        if (jpaRepo != null && jpaRepo.isPresent()) {
+            return new SpringDataOrderRepositoryAdapter(jpaRepo.get());
+        }
+
+        throw new IllegalStateException(
+                "Production requires JPA adapter (spring-boot-starter-data-jpa). Add the dependency and configure spring.datasource.*");
     }
 
     @Bean
