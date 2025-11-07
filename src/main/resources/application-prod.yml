@@ -1,22 +1,14 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/pedidos
-    username: postgres
-    password: postgres
+    url: ${app.db.url}
+    username: ${app.db.user}
+    password: ${app.db.pass}
     driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
 
-# Optional: connection pool settings (HikariCP is default in Spring Boot)
-# spring:
-#   datasource:
-#     hikari:
-#       maximum-pool-size: 10
-#       minimum-idle: 2
-
-# Logging and other production-friendly settings can go here
-server:
-  port: 8080
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
+logging:
+  level:
+    root: INFO

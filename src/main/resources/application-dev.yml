@@ -1,21 +1,19 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:pedidos;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: ${app.db.url}
+    username: ${app.db.user}
+    password: ${app.db.pass}
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
+
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+
   h2:
     console:
       enabled: true
       path: /h2-console
-
-# Opcional: puerto de la aplicación en desarrollo
-server:
-  port: 8080
 
 logging:
   level:
