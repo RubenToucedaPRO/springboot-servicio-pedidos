@@ -13,6 +13,7 @@ services:
       - "5432:5432"
     volumes:
       - pedidos-db-data:/var/lib/postgresql/data
+      - ./db/migration:/docker-entrypoint-initdb.d #Scripts de inicialización por orden
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
