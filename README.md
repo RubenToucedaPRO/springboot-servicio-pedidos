@@ -1,18 +1,24 @@
 # SpringBoot-Servicio-Pedidos
 
-Estructura del proyecto siguiendo Clean Architecture.
+Microservicio de ejemplo para la gestión de pedidos implementado con **Java 21** y **Spring Boot 3.2**, siguiendo **Clean Architecture**.
 
-Paquetes principales:
-- `domain` (entidades, value-objects, errores, eventos)
-- `application` (use cases, puertos, dtos)
-- `infrastructure` (adaptadores: persistence, rest, configuración)
-- `shared` (utilidades, excepciones)
+---
 
----------------------
-Este proyecto usa Java 21 (LTS) y Spring Boot 3.2.12.
+## Descripción
 
-- Java: se requiere JDK 21.
-- Spring Boot: parent `spring-boot-starter-parent` 3.2.12 (compatible con Spring Framework 6 / Jakarta).
+Este proyecto implementa un microservicio para crear, modificar, consultar y eliminar pedidos, con las siguientes características:
+
+- **API REST** para operaciones CRUD sobre pedidos.
+- **Modelo de dominio inmutable** con Value Objects (`Money`, `Quantity`, `ProductId`, `OrderId`).
+- **Adaptadores de persistencia**:
+  - H2 en memoria (`H2OrderRepository`) para desarrollo rápido y tests.
+  - JPA / Spring Data con Postgres (`JpaOrderRepository` + adapter) para producción.
+- **Soporte para eventos en memoria** (event bus) para pruebas y debugging.
+- Scripts de migración SQL y ejemplo de **Docker Compose** para Postgres.
+
+**Objetivo:** servir como ejemplo de cómo estructurar una aplicación Java/Spring Boot con límites claros entre dominio y dependencias, facilitar pruebas y permitir cambiar la tecnología de persistencia sin modificar los casos de uso.
+
+---
 
 ## Estructura del Proyecto (Paquetes)
 
@@ -50,210 +56,128 @@ src/main/java/com/pedidos/
 // Tests:
 src/test/java/com/pedidos/{domain,application,infrastructure}  # tests unitarios e integración
 
-
-## Comandos útiles
-
-Requisitos: Java 21 (LTS) y Maven instalados.
-
-- Limpiar el proyecto (elimina `target/`):
-
-```bash
-mvn clean
 ```
 
-- Compilar y empaquetar (genera el JAR en `target/`):
+## Requisitos
 
-```bash
-mvn clean package
-```
+- **Java 21 (LTS)**
+- **Maven**
+- Opcional: Docker para levantar Postgres y pgAdmin localmente
 
-- Empaquetar sin ejecutar tests (útil para iteraciones rápidas):
-
-```bash
-mvn clean package -DskipTests
-```
-
-- Ejecutar la aplicación desde Maven (arranca Spring Boot):
-
-```bash
-mvn spring-boot:run
-```
-
-- Ejecutar el JAR generado:
-
-```bash
-java -jar target/pedidos-0.0.1-SNAPSHOT.jar
-```
-
-- Ejecutar tests unitarios:
-
-```bash
-mvn test
-```
-
-- Ejecutar un test concreto (por clase):
-
-```bash
-mvn -Dtest=NombreClaseTest test
-```
-
-- Ejecutar con un perfil Spring activo (ej: `dev`):
-
-```bash
-mvn -Dspring-boot.run.profiles=dev spring-boot:run
-# o al ejecutar el JAR:
-java -jar -Dspring.profiles.active=dev target/pedidos-0.0.1-SNAPSHOT.jar
-```
-
-## Modo desarrollo (dev)
-Puedes probar contra Postgres en local durante el desarrollo creando un archivo `.env` en la raíz del proyecto. El proyecto usa `java-dotenv` en dev y leerá `.env` automáticamente cuando exista.
-
-Ejemplo mínimo de `.env` (archivo en la raíz del proyecto):
-
-```bash
-# .env
-DB_KIND=POSTGRES
-DB_URL=jdbc:postgresql://localhost:5432/pedidos
-DB_USER=postgres
-DB_PASS=postgres
-```
-
-Usa el perfil `dev` para ejecutar la aplicación sin .env con H2 en memoria y reinicio automático (devtools). En caso de usar  el `.env` con H2 modifica `DB_KIND`:
-
-```bash
-# .env
-DB_KIND=H2
-DB_URL=jdbc:postgresql://localhost:5432/pedidos
-DB_USER=postgres
-DB_PASS=postgres
-```
-	- H2 console (por defecto cuando el perfil `dev` está activo):
-
-      - URL: http://localhost:8080/h2-console
-      - JDBC URL: jdbc:h2:mem:pedidos
-      - Usuario: sa  (sin contraseña por defecto)
-
-Comandos para ejecutar en modo dev::
-```bash
-mvn -Dspring-boot.run.profiles=dev spring-boot:run
-```
-
-O construir y ejecutar el JAR en modo dev:
-```bash
-# construir primero
-mvn clean package -DskipTests
-
-java -Dspring.profiles.active=dev -jar target/pedidos-0.0.1-SNAPSHOT.jar
-```
-
-- Ejecutar con reinicio automático y habilitar debug remoto (opcional):
-
-```bash
-mvn -Dspring-boot.run.profiles=dev \
-        -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005" \
-        spring-boot:run
-```
-
-Notas rápidas:
-
-- `spring-boot-devtools` está incluido en `pom.xml` en scope `runtime` y permite reinicio automático cuando cambias código fuente.
-- Para ver SQL en consola ya está configurado `spring.jpa.show-sql=true` en `application-dev.yml`.
+---
 
 
-## O ejecutar el JAR (asegúrate de tener .env presente en el directorio de trabajo)
-java -Dspring.profiles.active=dev -jar target/pedidos-0.0.1-SNAPSHOT.jar
-```
+## Comandos Maven útiles
 
-También puedes exportar variables si no quieres usar `.env`:
+| Acción | Comando |
+|--------|---------|
+| Limpiar proyecto | `mvn clean` |
+| Compilar y empaquetar | `mvn clean package` |
+| Compilar sin tests | `mvn clean package -DskipTests` |
+| Ejecutar aplicación | `mvn spring-boot:run` <br> `java -jar target/pedidos-0.0.1-SNAPSHOT.jar` |
+| Ejecutar tests | `mvn test` |
+| Ejecutar test específico | `mvn -Dtest=NombreClaseTest test` |
+| Ejecutar con perfil Spring | `mvn -Dspring-boot.run.profiles=dev spring-boot:run` <br> `java -Dspring.profiles.active=dev -jar target/pedidos-0.0.1-SNAPSHOT.jar` |
 
-```bash
-export DB_KIND=POSTGRES
-export DB_URL=jdbc:postgresql://localhost:5432/pedidos
-export DB_USER=postgres
-export DB_PASS=postgres
-mvn -Dspring-boot.run.profiles=dev spring-boot:run
-```
+---
 
-> Nota: la configuración `dataSourceDev()` intenta detectar si `DB_KIND=POSTGRES` y, en ese caso, crea un `PGSimpleDataSource`. Si no se detecta, usa H2 en memoria.
+## Modos de ejecución
 
-## Producción (perfil `prod`)
+### Desarrollo (`dev`)
 
-En producción se recomienda usar el perfil `prod` y proporcionar las propiedades estándar de Spring Boot (`spring.datasource.*`). El proyecto incluye `src/main/resources/application-prod.yml` con un ejemplo de configuración para Postgres.
+- `.env` opcional para Postgres:
 
-Ejemplo de ejecución con perfil `prod`:
+DB_KIND=POSTGRES  
+DB_URL=jdbc:postgresql://localhost:5432/pedidos  
+DB_USER=postgres  
+DB_PASS=postgres  
 
-```bash
-# Usando Maven
-mvn -Dspring-boot.run.profiles=prod spring-boot:run
+- Con H2 en memoria (perfil `dev`):
 
-# O al ejecutar el JAR
+DB_KIND=H2  
+
+- **H2 Console**:  
+  - URL: http://localhost:8080/h2-console  
+  - JDBC URL: jdbc:h2:mem:pedidos  
+  - Usuario: sa (sin contraseña)  
+
+- Reinicio automático con devtools y debug remoto opcional:
+
+mvn -Dspring-boot.run.profiles=dev -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005" spring-boot:run  
+
+### Producción (`prod`)
+
+- Configuración mediante `application-prod.yml` o variables de entorno estándar de Spring Boot:
+
+export SPRING_DATASOURCE_URL=jdbc:postgresql://db-host:5432/pedidos  
+export SPRING_DATASOURCE_USERNAME=prod_user  
+export SPRING_DATASOURCE_PASSWORD=prod_secret  
+
 java -Dspring.profiles.active=prod -jar target/pedidos-0.0.1-SNAPSHOT.jar
-```
 
-Opciones para pasar la configuración de la base de datos en producción:
+---
 
-- Usar `application-prod.yml` (ya añadido como ejemplo en `src/main/resources`).
-- O establecer las variables de entorno estándar de Spring Boot antes de arrancar:
+## Docker Compose para Postgres y pgAdmin
 
-```bash
-export SPRING_DATASOURCE_URL=jdbc:postgresql://db-host:5432/pedidos
-export SPRING_DATASOURCE_USERNAME=prod_user
-export SPRING_DATASOURCE_PASSWORD=prod_secret
-java -Dspring.profiles.active=prod -jar target/pedidos-0.0.1-SNAPSHOT.jar
-```
+Este proyecto incluye un archivo `docker-compose.yml` para levantar Postgres y pgAdmin localmente.
+
+                 ┌────────────────────────────┐
+                 │        Docker Network      │
+                 │ (red interna creada por Compose)
+                 ├────────────────────────────┤
+                 │                            │
+                 │   ┌──────────────────┐     │
+                 │   │  Service:        │     │
+                 │   │  postgres        │◄───────────┐
+                 │   │  Container:      │     │      │
+                 │   │  pedidos-postgres│     │      │
+                 │   │  Hostname:       │     │      │
+                 │   │  postgres        │     │      │
+                 │   └──────────────────┘     │      │
+                 │                            │      │ 
+                 │   ┌──────────────────┐     │      │
+                 │   │  Service:        │     │      │
+                 │   │  pgadmin         │────────────┘ 
+                 │   │  Container:      │     │         
+                 │   │  pedidos-pgadmin │     │         
+                 │   │  Hostname:       │     │         
+                 │   │  pgadmin         │     │         
+                 │   └──────────────────┘     │         
+                 │                            │
+                 └────────────────────────────┘
 
 
-## Probar Postgres local con Docker Compose
+### Levantar contenedores
 
-Puedes levantar uno rápido con Docker Compose que use los mismos valores de conexión que el proyecto por defecto.
+docker-compose up -d  
 
-Archivo `docker-compose.yml` (incluido en la raíz del proyecto):
+### Ver logs de Postgres
 
-```yaml
-version: '3.8'
-services:
-	postgres:
-		image: postgres:15-alpine
-		environment:
-			POSTGRES_USER: postgres
-			POSTGRES_PASSWORD: postgres
-			POSTGRES_DB: pedidos
-		ports:
-			- "5432:5432"
-		volumes:
-			- pedidos-db-data:/var/lib/postgresql/data
-```
+docker-compose logs -f postgres  
 
-Comandos rápidos:
+### Detener y limpiar contenedores y volúmenes
 
-```bash
-# Levantar Postgres en segundo plano
-docker-compose up -d
+docker-compose down -v  
 
-# Ver logs (opcional)
-docker-compose logs -f postgres
+### Acceso a pgAdmin
 
-# Parar y eliminar contenedor y volumen (limpieza)
-docker-compose down -v
-```
+- URL: http://localhost:8081  
+- Usuario: admin@admin.com  
+- Contraseña: admin  
 
-### pgAdmin
+#### Configurar servidor Postgres en pgAdmin
 
-Si prefieres usar una interfaz gráfica para explorar la base de datos, este repositorio incluye un servicio `pgadmin` en `docker-compose.yml`.
+- Hostname: postgres  
+- Puerto: 5432  
+- Usuario: postgres  
+- Contraseña: postgres  
 
-- Accede a: http://localhost:8081
-- Credenciales por defecto: `pgadmin@local` / `pgadmin`
-- Dentro de pgAdmin añade un servidor con Host: `postgres`, Port: `5432`, Username: `postgres`, Password: `postgres`.
+Después de levantar Postgres con Docker Compose, puedes ejecutar la aplicación en modo desarrollo (`dev`) usando `.env` o las variables por defecto.
 
-Nota: cuando configures el servidor dentro de pgAdmin (que corre en otro contenedor), utiliza el hostname `postgres` (la red de Docker los resuelve). Si conectas desde tu máquina directamente usa `localhost:5432`.
+## Notas adicionales
 
-Después de levantar Postgres con `docker-compose up -d` puedes ejecutar la app en modo dev (usa `.env` o las variables por defecto):
-
-```bash
-# Con Maven
-mvn -Dspring-boot.run.profiles=dev spring-boot:run
-
-# O construir y ejecutar el JAR
-mvn clean package -DskipTests
-java -Dspring.profiles.active=dev -jar target/pedidos-0.0.1-SNAPSHOT.jar
-```
+- `spring-boot-devtools` está incluido en `pom.xml` en scope `runtime` y permite reinicio automático al cambiar código fuente.  
+- Para ver SQL generado por JPA, se configura `spring.jpa.show-sql=true` en `application-dev.yml`.  
+- La configuración `dataSourceDev()` detecta automáticamente si `DB_KIND=POSTGRES` y crea un `PGSimpleDataSource`. Si no, utiliza H2 en memoria.  
+- Se recomienda usar perfiles Spring (`dev` o `prod`) para separar entornos de desarrollo y producción.  
+- Variables de entorno pueden usarse en lugar de `.env` si se prefiere.
