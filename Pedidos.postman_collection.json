@@ -13,12 +13,39 @@
 				{
 					"listen": "test",
 					"script": {
-						"type": "text/javascript",
 						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});"
-						]
+							"// Visualization Script",
+							"const template = `",
+							"<table border='1' style='border-collapse: collapse; width: 50%;'>",
+							"  <thead>",
+							"    <tr>",
+							"      <th>Currency</th>",
+							"      <th>Total Amount</th>",
+							"    </tr>",
+							"  </thead>",
+							"  <tbody>",
+							"    {{#each totals}}",
+							"    <tr>",
+							"      <td>{{@key}}</td>",
+							"      <td>{{this}}</td>",
+							"    </tr>",
+							"    {{/each}}",
+							"  </tbody>",
+							"</table>",
+							"`;",
+							"",
+							"function createPayload() {",
+							"    var json = pm.response.json();",
+							"    return {",
+							"        totals: json.totals || {}",
+							"    };",
+							"}",
+							"",
+							"pm.visualizer.set(template, createPayload());"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
 					}
 				}
 			],
@@ -26,18 +53,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{base_url}}/info?id=1",
+					"raw": "{{base_url}}/{{order}}",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
-						"info"
-					],
-					"query": [
-						{
-							"key": "id",
-							"value": "1"
-						}
+						"{{order}}"
 					]
 				},
 				"description": "This is a GET request and it is used to \"get\" data from an endpoint. There is no request body for a GET request, but you can use query parameters to help specify the resource you want data on (e.g., in this request, we have `id=1`).\n\nA successful GET response will have a `200 OK` status, and should include some kind of response body - for example, HTML web content or JSON data."
@@ -67,7 +88,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"items\": [\n        {\n            \"productId\": \"P-1\",\n            \"quantity\": 2,\n            \"unitPrice\": 10.50,\n            \"currency\": \"EUR\"\n        }\n    ]\n}",
+					"raw": "{\n    \"items\": [\n        {\n            \"productId\": \"P-33\",\n            \"quantity\": 2,\n            \"unitPrice\": 31.50,\n            \"currency\": \"EUR\"\n        }\n    ]\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -75,12 +96,9 @@
 					}
 				},
 				"url": {
-					"raw": "{{base_url}}/post",
+					"raw": "{{base_url}}",
 					"host": [
 						"{{base_url}}"
-					],
-					"path": [
-						"post"
 					]
 				},
 				"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
@@ -140,7 +158,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "\n        {\n            \"productId\": \"P-5\",\n            \"quantity\": 10,\n            \"currency\": \"USD\"\n        }",
+					"raw": "\n        {\n            \"productId\": \"P-44444\",\n            \"quantity\": 2,\n            \"unitPrice\": 1,\n            \"currency\": \"USD\"\n        }",
 					"options": {
 						"raw": {
 							"language": "json"

@@ -7,7 +7,9 @@ Resumen rápido
 - Importa la colección de Postman adjunta.
 - Crea un entorno (Environment) con las variables `base_url` y `order`.
 - Ajusta `base_url` a tu servidor local (por ejemplo `http://localhost:8080/api/orders`).
-- Ejecuta las peticiones: crear pedido, añadir item, obtener pedido, borrar pedido.
+- Ejecuta las peticiones: crear pedido.
+- Actualiza la variable `order` con el ID del pedido creado.
+- Ejecuta las peticiones: añadir item, obtener pedido, borrar pedido.
 
 Requisitos previos
 
@@ -23,7 +25,7 @@ Por defecto la aplicación se sirve en el puerto 8080. El controlador REST expon
 
 Variables de entorno (Environment)
 
-En Postman crea un nuevo Environment llamado `local-pedidos` con estas variables:
+En Postman crea un nuevo Environment llamado `pPdidos` con estas variables:
 
 - `base_url` = `http://localhost:8080/api/orders`
 - `order` = `` (vacío — se rellenará cuando crees un pedido)
@@ -31,7 +33,7 @@ En Postman crea un nuevo Environment llamado `local-pedidos` con estas variables
 Importar la colección
 
 1. En Postman: File → Import → elegir `Pedidos.postman_collection.json` desde el proyecto.
-2. Selecciona la colección importada (debería llamarse **Pedidos**) y el Environment `local-pedidos`.
+2. Selecciona la colección importada (debería llamarse **Pedidos**) y el Environment `Pedidos`.
 
 Mapeo de las peticiones de la colección a los endpoints reales
 
